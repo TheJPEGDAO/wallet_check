@@ -1,23 +1,36 @@
 import logo from "./logo.svg";
-import React from "react";
+import React, {useEffect} from "react";
+import {Asset, ServerApi} from "stellar-sdk";
+import useAccounts, {getBalanceLineForAssetFromAccount} from "./useAccounts";
+import BigNumber from "bignumber.js";
+
+const code = 'JPEG';
+const issuer = 'GDZQGQFWKQQWJ7ACKK4DJKFQ7QQ5FXD3PEQBDUBISTNJYW5LWW3FSCKK';
+const checkAsset = new Asset(code, issuer);
+
+const getAssetBalance = (account: ServerApi.AccountRecord, asset: Asset): BigNumber => {
+    return new BigNumber(getBalanceLineForAssetFromAccount(asset, account)?.balance??0);
+}
 
 const Home = () => {
-    return <div className="App">
-        <header className="App-header">
-            <img src={logo} className="App-logo" alt="logo" />
-            <p>
-                Edit <code>src/Home.tsx</code> and save to reload.
-            </p>
-            <a
-                className="App-link"
-                href="https://reactjs.org"
-                target="_blank"
-                rel="noopener noreferrer"
-            >
-                Learn React
-            </a>
-        </header>
-    </div>
+    const getAccounts = useAccounts(checkAsset, 10000);
+    useEffect(() => {
+        return () => {
+            getAccounts.abort();
+        }
+        // eslint-disable-next-line
+    }, []);
+
+    return <header className="App-header">
+        {(getAccounts.loading && <img src={logo} className="App-logo" alt="logo" />)}
+        <p>{getAccounts.count}</p>
+        <ul>{
+            getAccounts.accounts
+                .sort((a,b) => getAssetBalance(a, checkAsset).minus(getAssetBalance(b, checkAsset)).toNumber())
+                .reverse()
+                .map(a => <li key={`i_${a.id}`}>{a.id}: {a.balances[0].balance}</li>)
+        }</ul>
+    </header>
 }
 
 export default Home;
