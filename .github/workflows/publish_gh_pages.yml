@@ -2,8 +2,8 @@ name: publish to github-pages
 
 on:
   workflow_dispatch:
-#  schedule:
-#    - cron "12 * * * *"
+  schedule:
+    - cron: '0/30 * * * *'
   push:
     branches:
       - main
@@ -22,7 +22,16 @@ jobs:
         with:
           node-version: "16.x"
       - run: npm ci
-      - run: |
+      - name: Take member snapshot
+        run: npm snapshot
+        if: github.event.schedule != ''
+        continue-on-error: true
+        env:
+          SNAPSHOT_ASSET: ${{ secrets.SNAPSHOT_ASSET }}
+          SNAPSHOT_THRESHOLD: ${{ secrets.SNAPSHOT_THRESHOLD }}
+
+      - name: Publish new version of github pages
+        run: |
           git remote set-url origin https://git:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
           git config user.name github-actions-bot
           git config user.email support+actions@github.com
