@@ -3,16 +3,17 @@ import {useEffect, useState} from "react";
 import loopcall from "@cosmic-plus/loopcall";
 import BigNumber from "bignumber.js";
 import {server} from "./common";
+import assert from "assert";
 
-type BalanceLineLiquidityPool = Horizon.BalanceLineLiquidityPool;
 type BalanceLine = Horizon.BalanceLine;
+type BalanceLineAsset = Horizon.BalanceLineAsset;
+type BalanceLineLiquidityPool = Horizon.BalanceLineLiquidityPool;
+type BalanceLineNative = Horizon.BalanceLineNative;
 
-export const getBalanceLineForAssetFromAccount = (asset: Asset, account: ServerApi.AccountRecord): Exclude<BalanceLine, BalanceLineLiquidityPool>|undefined => {
+export const getBalanceLineForAssetFromAccount = (asset: Asset, account: ServerApi.AccountRecord): BalanceLineAsset|undefined => {
     return account.balances
-        .filter((b: BalanceLine): b is (Exclude<BalanceLine, BalanceLineLiquidityPool>) => b.asset_type === asset.getAssetType())
-        .find((b: Exclude<BalanceLine, BalanceLineLiquidityPool>) => b.asset_type === 'native' ||
-            (b.asset_code === asset.getCode() && b.asset_issuer === asset.getIssuer())
-        );
+        .filter((b: BalanceLine): b is (Exclude<BalanceLine, BalanceLineLiquidityPool|BalanceLineNative>) => b.asset_type === asset.getAssetType() && !asset.isNative())
+        .find((b: BalanceLineAsset) => (b.asset_code === asset.getCode() && b.asset_issuer === asset.getIssuer()));
 }
 
 export const isAssetBalanceAboveThreshold = (balanceLine: Exclude<BalanceLine, BalanceLineLiquidityPool>|undefined, threshold: BigNumber): boolean => {
@@ -20,12 +21,60 @@ export const isAssetBalanceAboveThreshold = (balanceLine: Exclude<BalanceLine, B
     return threshold.lte(balanceLine.balance);
 }
 
-interface UseAccountsState {
-    accounts: ServerApi.AccountRecord[],
-    count: number
-    loading: boolean,
-    abort: () => void,
+export interface AccountRecord {
+    id: string;
+    balance: string;
 }
+
+interface UseAccountsState {
+    accounts: AccountRecord[];
+    count: number;
+    loading: boolean;
+    abort: () => void;
+}
+
+interface GetAssetsProps {
+    asset: Asset;
+    threshold: number;
+    limit?: number;
+    getAccountsAbortController?: AbortController;
+    onStep?: (account: AccountRecord) => void;
+}
+
+export const getAccountsWithAssetBalanceOverThreshold = ({
+                                                             asset,
+                                                             threshold,
+                                                             limit,
+                                                             getAccountsAbortController,
+                                                             onStep
+                                                         }: GetAssetsProps): Promise<boolean> => {
+    assert(!asset.isNative(), "asset can not be native")
+    const thresholdBigNumber = new BigNumber(threshold);
+    let count = 0;
+
+    const processFilterAccountByBalanceThreshold = (account: ServerApi.AccountRecord) => {
+        const balanceLine = getBalanceLineForAssetFromAccount(asset, account);
+
+        const rAccount = {id: account.id, balance: balanceLine?.balance??''};
+        // @ts-ignore
+        Object.keys(account).forEach(key => delete account[key]);
+        if (isAssetBalanceAboveThreshold(balanceLine, thresholdBigNumber)) {
+            onStep?.(rAccount);
+            count++;
+        }
+        return false;
+    }
+
+    return loopcall(
+        server.accounts().forAsset(asset).limit(50),
+        {
+            filter: processFilterAccountByBalanceThreshold,
+            breaker: () => {
+                return getAccountsAbortController?.signal.aborted || (limit !== undefined && limit <= count)
+            }
+        })
+        .then(() => true);
+};
 
 const useAccounts = (asset: Asset, threshold: number, limit?: number): UseAccountsState => {
     const [state, setState] = useState<UseAccountsState>({
@@ -36,30 +85,23 @@ const useAccounts = (asset: Asset, threshold: number, limit?: number): UseAccoun
     });
 
     useEffect(() => {
-        const thresholdBigNumber = new BigNumber(threshold);
         const fetchAccountsAbortController = new AbortController();
-        const processFilterAccountByBalanceThreshold = (account: ServerApi.AccountRecord) => {
-            const balanceLine = getBalanceLineForAssetFromAccount(asset, account);
-            if (balanceLine) {
-                account.balances = [balanceLine];
-            }
-            if (isAssetBalanceAboveThreshold(balanceLine, thresholdBigNumber)) {
-                setState(p => ({...p, count: p.count + 1}));
-                return true;
-            }
-            return false;
-        }
+        setState({loading: true, accounts: [], abort: () => {
+            console.warn("Abort loading accounts");
+            fetchAccountsAbortController.abort();
+            }, count: 0});
 
-        setState({loading: true, accounts: [], abort: () => {fetchAccountsAbortController.abort();}, count: 0});
-        loopcall(
-            server.accounts().forAsset(asset),
-            {
-                limit: limit,
-                filter: processFilterAccountByBalanceThreshold,
-                breaker: () => fetchAccountsAbortController.signal.aborted
-            })
-            .then((accounts: ServerApi.AccountRecord[]) => {
-                setState(p => ({...p, accounts: accounts, count: accounts.length}));
+        getAccountsWithAssetBalanceOverThreshold({
+            asset: asset,
+            threshold: threshold,
+            limit: limit,
+            getAccountsAbortController: fetchAccountsAbortController,
+            onStep: a => {
+                setState(p => ({...p, count: p.count + 1, accounts: p.accounts.concat(a)}));
+            }
+        })
+            .then(done => {
+                console.log(`done loading ${state.count} accounts`)
             })
             .catch((e: any) => console.warn(e))
             .finally(() => {
