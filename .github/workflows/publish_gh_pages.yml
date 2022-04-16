@@ -2,8 +2,8 @@ name: publish to github-pages
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0/30 * * * *'
+#  schedule:
+#    - cron: '0/30 * * * *'
   push:
     branches:
       - main
