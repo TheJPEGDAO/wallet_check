@@ -1,13 +1,12 @@
 {
   "files": {
-    "main.css": "/wallet_check/static/css/main.ba17183d.css",
-    "main.js": "/wallet_check/static/js/main.5dc11f57.js",
+    "main.css": "/wallet_check/static/css/main.e2a154d1.css",
+    "main.js": "/wallet_check/static/js/main.d55cd1a1.js",
     "static/js/27.e09f913b.chunk.js": "/wallet_check/static/js/27.e09f913b.chunk.js",
-    "static/media/logo.svg": "/wallet_check/static/media/logo.6ce24c58023cc2f8fd88fe9d219db6c6.svg",
     "index.html": "/wallet_check/index.html"
   },
   "entrypoints": [
-    "static/css/main.ba17183d.css",
-    "static/js/main.5dc11f57.js"
+    "static/css/main.e2a154d1.css",
+    "static/js/main.d55cd1a1.js"
   ]
 }
