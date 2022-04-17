@@ -1,4 +1,3 @@
-import logo from "./logo.svg";
 import 'antd/dist/antd.css';
 import React, {useEffect} from "react";
 import {Asset} from "stellar-sdk";
@@ -13,12 +12,14 @@ const threshold = 10000;
 
 const Home = () => {
     const getAccounts = useAccounts(checkAsset, threshold);
+    /**/
     useEffect(() => {
         return () => {
             getAccounts.abort();
         }
         // eslint-disable-next-line
     }, []);
+    /**/
 
     return <>
         <p>Accounts holding at least {threshold} {code}: {getAccounts.count}</p>
