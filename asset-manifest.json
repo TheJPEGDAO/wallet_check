@@ -1,12 +1,12 @@
 {
   "files": {
     "main.css": "/wallet_check/static/css/main.e2a154d1.css",
-    "main.js": "/wallet_check/static/js/main.bb4f6bd5.js",
+    "main.js": "/wallet_check/static/js/main.66d821e3.js",
     "static/js/27.e09f913b.chunk.js": "/wallet_check/static/js/27.e09f913b.chunk.js",
     "index.html": "/wallet_check/index.html"
   },
   "entrypoints": [
     "static/css/main.e2a154d1.css",
-    "static/js/main.bb4f6bd5.js"
+    "static/js/main.66d821e3.js"
   ]
 }
