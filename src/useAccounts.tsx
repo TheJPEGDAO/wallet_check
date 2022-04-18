@@ -75,7 +75,7 @@ export const getAccountsWithAssetBalanceOverThreshold = ({
                     return true;
                 }
                 if (limit !== undefined && limit >= count) {
-                    console.log("account limit reached");
+                    console.log("account limit reached: ", limit);
                     return true;
                 }
                 return false;
@@ -119,7 +119,7 @@ const useAccounts = (asset: Asset, threshold: number, limit?: number): UseAccoun
             state.abort();
         }
         // eslint-disable-next-line
-    }, []);
+    }, [asset, threshold]);
 
     return state;
 }

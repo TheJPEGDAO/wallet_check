@@ -1,16 +1,18 @@
 import 'antd/dist/antd.css';
-import React, {useEffect} from "react";
+import React, {useEffect, useState} from "react";
 import {Asset} from "stellar-sdk";
 import useAccounts, {AccountRecord} from "./useAccounts";
 import {Table} from "antd";
 import BigNumber from "bignumber.js";
+import AssetSearch from "./AssetSearch";
+import {assetToString, getStellarAsset} from "./common";
 
 const code = 'JPEG';
 const issuer = 'GDZQGQFWKQQWJ7ACKK4DJKFQ7QQ5FXD3PEQBDUBISTNJYW5LWW3FSCKK';
-const checkAsset = new Asset(code, issuer);
 const threshold = 10000;
 
 const Home = () => {
+    const [checkAsset, setCheckAsset] = useState<Asset>(new Asset(code, issuer));
     const getAccounts = useAccounts(checkAsset, threshold);
     /**/
     useEffect(() => {
@@ -21,8 +23,14 @@ const Home = () => {
     }, []);
     /**/
 
+    useEffect(() => {
+        getAccounts.abort();
+        // eslint-disable-next-line
+    }, [checkAsset]);
+
     return <>
-        <p>Accounts holding at least {threshold} {code}: {getAccounts.count}</p>
+        <p>Accounts holding at least {threshold} {assetToString(checkAsset)}: {getAccounts.count}</p>
+        <AssetSearch style={{width: 400}} onSelect={(value: string) => setCheckAsset(getStellarAsset(value))} />
         <Table<AccountRecord>
             rowKey={r => r.id}
             dataSource={getAccounts.accounts}
