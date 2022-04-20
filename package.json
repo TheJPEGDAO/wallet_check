@@ -26,6 +26,7 @@
   },
   "scripts": {
     "start": "craco start",
+    "prebuild": "npx ts-node scripts/IndexSnapshots.tsx",
     "build": "craco build",
     "test": "craco test",
     "eject": "craco eject",

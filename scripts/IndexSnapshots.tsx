@@ -15,8 +15,9 @@ const indexSnapshotFile = (filename: string, path: string): SnapshotIndexData|vo
 }
 
 const indexSnapshots = () => {
-    const snapshots: SnapshotIndexData[] = readdirSync("snapshots", "utf8")
-        .map(f => indexSnapshotFile(f, "snapshots"))
+    const snapshotFolder = "public/snapshots";
+    const snapshots: SnapshotIndexData[] = readdirSync(snapshotFolder, "utf8")
+        .map(f => indexSnapshotFile(f, snapshotFolder))
         .filter((snapshotIndex): snapshotIndex is SnapshotIndexData  => !!snapshotIndex)
     writeFileSync("src/snapshots_index.json", JSON.stringify(snapshots))
 };

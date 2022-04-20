@@ -17,11 +17,18 @@ jobs:
       url: https://thejpegdao.github.io/wallet_check/
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+        with:
+          ref: gh-pages
+          path: gh_pages
       - uses: actions/setup-node@v2
         with:
           node-version: "16.x"
       - run: npm ci
+      - name: fetch existing snapshots
+        run: |
+          cp gh_pages/snapshots/*.json public/snapshots
       - name: Take member snapshot
         run: npm snapshot
         if: github.event.schedule != ''
