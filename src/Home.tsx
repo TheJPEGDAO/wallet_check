@@ -64,10 +64,7 @@ const Home = () => {
             </>}
         />
 
-        <Descriptions>
-            <Descriptions.Item label={"Selected Asset"}>{assetToString(checkAsset)}</Descriptions.Item>
-            <Descriptions.Item label={"Desired threshold"}>{threshold}</Descriptions.Item>
-        </Descriptions>
+
         <Row gutter={[10, 0]}>
             <Col flex={"20px"}/>
             <Col><label htmlFor={"assetSearch"}>Asset: </label></Col>
@@ -105,6 +102,12 @@ const Home = () => {
             rowKey={r => r.id}
             dataSource={getAccounts.accounts}
             loading={getAccounts.loading}
+            footer={() =>
+                <Descriptions layout={"vertical"}>
+                    <Descriptions.Item label={"Selected Asset"} contentStyle={{display: "block"}} span={2}>{assetToString(checkAsset)}</Descriptions.Item>
+                    <Descriptions.Item label={"Desired threshold"}>{threshold}</Descriptions.Item>
+                </Descriptions>
+            }
         >
             <Table.Column
                 dataIndex={"id"}
@@ -116,7 +119,6 @@ const Home = () => {
                 defaultSortOrder={getAccounts.loading?null:"descend"}
                 sorter={(a, b) => new BigNumber(a.balance).minus(b.balance).toNumber()}
             />
-
         </Table>
     </>
 }
