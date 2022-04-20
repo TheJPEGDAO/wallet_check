@@ -1,13 +1,7 @@
 import {AccountRecord, getAccountsWithAssetBalanceOverThreshold} from "../src/useAccounts";
-import {getStellarAsset} from "../src/common";
+import {getSnapshotFilename, getStellarAsset} from "../src/common";
 import {mkdirSync, writeFileSync} from "fs";
 import SnapshotData from "../src/SnapshotData";
-
-const snapshotFilename = (date: Date): string => {
-    const m = String(date.getUTCMonth()+1).padStart(2, '0');
-    const d = String(date.getUTCDate()).padStart(2, '0');
-    return `${date.getUTCFullYear()}-${m}-${d}.json`;
-}
 
 const saveSnapshot = (data: SnapshotData): string => {
     const dir = 'public/snapshots/';
@@ -17,7 +11,7 @@ const saveSnapshot = (data: SnapshotData): string => {
         if (!(e instanceof Object && e.hasOwnProperty("code") && (e as {code: string}).code === 'EEXIST'))
             throw e;
     }
-    const filename = snapshotFilename(data.updated);
+    const filename = getSnapshotFilename(data.updated);
     writeFileSync(dir + filename, JSON.stringify(data));
 
     return dir + filename;

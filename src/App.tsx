@@ -1,7 +1,8 @@
 import React, {useMemo} from "react";
 import "./App.css";
 import {BrowserRouter, Navigate, Routes, Route, Link, useLocation} from "react-router-dom";
-import Home from "./Home";
+import TakeSnapshot from "./TakeSnapshot";
+import Snapshots from "./Snapshots";
 import {Layout, Menu, Space} from "antd";
 import {Content, Footer, Header} from "antd/lib/layout/layout";
 import {InstagramOutlined, TwitterOutlined} from "@ant-design/icons";
@@ -41,15 +42,14 @@ const App = (): JSX.Element => {
                         activeKey={activeMenuKey}
                     >
                         <Menu.Item key={"nav:snapshot"}><Link to={"/snapshot"}>Take a snapshot</Link></Menu.Item>
-                        {/* <Menu.Item key={"nav:snapshots"}><Link to={"/snapshots"}>Show scheduled snapshots</Link></Menu.Item> */ }
+                        <Menu.Item key={"nav:snapshots"}><Link to={"/snapshots"}>Show recent snapshots</Link></Menu.Item>
                     </Menu>
                 </Header>
                 <Content className={"pageContent"}>
                     <Routes>
                         {<Route path={"/"} element={<Navigate to="/snapshot" replace/>}/>}
-
-                        <Route path={"/snapshot"} element={<Home/>}/>
-                        <Route path={"/snapshots"} element={<Home/>}/>
+                        <Route path={"/snapshot"} element={<TakeSnapshot/>}/>
+                        <Route path={"/snapshots"} element={<Snapshots/>}/>
                         <Route path={"*"} element={<NotFound/>}/>
                     </Routes>
                 </Content>

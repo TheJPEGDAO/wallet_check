@@ -10,7 +10,7 @@ import {CameraOutlined, FileTextOutlined} from '@ant-design/icons';
 import SnapshotData from "./SnapshotData";
 
 
-const Home = () => {
+const TakeSnapshot = () => {
     const [checkAsset, setCheckAsset] = useState<Asset>();
     const [threshold, setThreshold] = useState<number>();
     const getAccounts = useAccounts(checkAsset, threshold);
@@ -129,4 +129,4 @@ const Home = () => {
     </>
 }
 
-export default Home;
+export default TakeSnapshot;
