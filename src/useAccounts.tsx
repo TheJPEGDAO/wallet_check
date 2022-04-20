@@ -1,5 +1,5 @@
 import {Asset, Horizon, ServerApi} from "stellar-sdk";
-import {useEffect, useMemo, useState} from "react";
+import {useEffect, useState} from "react";
 import loopcall from "@cosmic-plus/loopcall";
 import BigNumber from "bignumber.js";
 import {server} from "./common";
@@ -31,6 +31,7 @@ interface UseAccountsState {
     count: number;
     loading: boolean;
     abort: () => void;
+    search: () => void;
 }
 
 interface GetAssetsProps {
@@ -56,8 +57,7 @@ export const getAccountsWithAssetBalanceOverThreshold = ({
         const balanceLine = getBalanceLineForAssetFromAccount(asset, account);
 
         const rAccount = {id: account.id, balance: balanceLine?.balance??''};
-        // @ts-ignore
-        Object.keys(account).forEach(key => delete account[key]);
+        Object.keys(account).forEach(key => delete (account as {[name: string]: any})[key]);
         if (isAssetBalanceAboveThreshold(balanceLine, thresholdBigNumber)) {
             onStep?.(rAccount);
             count++;
@@ -84,30 +84,46 @@ export const getAccountsWithAssetBalanceOverThreshold = ({
         .then(() => true);
 };
 
-const useAccounts = (asset: Asset, threshold: number, limit?: number): UseAccountsState => {
-    const fetchAccountsAbortController = useMemo(() => new AbortController(), []);
+const useAccounts = (asset: Asset|undefined, threshold: number|undefined, limit?: number): UseAccountsState => {
+    const [shouldSearch, setShouldSearch] = useState(false);
+    const fetchAccountsAbortController = new AbortController();
     const [state, setState] = useState<UseAccountsState>({
         accounts: [],
         count: 0,
         loading: false,
         abort: () => { fetchAccountsAbortController.abort(); },
+        search: () => { setShouldSearch(true); }
     });
 
     useEffect(() => {
+        console.log('change...')
+        if (!shouldSearch) return;
         if (state.loading) return;
+        if (!asset) {
+            state.abort();
+            return;
+        }
         setState(p => ({...p, loading: true, accounts: [], count: 0}));
-
+        setShouldSearch(false);
         getAccountsWithAssetBalanceOverThreshold({
             asset: asset,
-            threshold: threshold,
+            threshold: threshold??0,
             limit: limit,
             abortSignal: fetchAccountsAbortController.signal,
             onStep: a => {
-                setState(p => ({...p, count: p.count + 1, accounts: p.accounts.concat(a)}));
+                setState(p => {
+                    const newAccounts = !!(p.accounts.find(pa => pa.id === a.id))
+                        ? p.accounts
+                        : p.accounts.concat(a);
+                    return {...p,
+                        count: newAccounts.length,
+                        accounts: newAccounts,
+                    };
+                });
             }
         })
             .then(done => {
-                state.abort();
+                //state.abort();
             })
             .catch((e: any) => console.warn(e))
             .finally(() => {
@@ -119,7 +135,7 @@ const useAccounts = (asset: Asset, threshold: number, limit?: number): UseAccoun
             state.abort();
         }
         // eslint-disable-next-line
-    }, [asset, threshold]);
+    }, [asset, threshold, shouldSearch]);
 
     return state;
 }

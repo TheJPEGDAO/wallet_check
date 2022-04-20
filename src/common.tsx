@@ -7,7 +7,8 @@ export const getStellarAsset = (code: string): Asset => {
         ? Asset.native()
         : new Asset(assetCode, assetIssuer);
 };
-export const assetToString = (asset: Asset): string => {
+export const assetToString = (asset?: Asset): string => {
+    if (!asset) return "";
     return asset.isNative()
         ? 'native'
         : asset.getCode()+':'+asset.getIssuer();

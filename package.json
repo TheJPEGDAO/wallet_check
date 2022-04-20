@@ -4,6 +4,7 @@
   "homepage": "https://thejpegdao.github.io/wallet_check/",
   "private": true,
   "dependencies": {
+    "@ant-design/icons": "^4.7.0",
     "@cosmic-plus/loopcall": "^1.6.0",
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.0.1",
@@ -16,6 +17,7 @@
     "bignumber.js": "^9.0.2",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
+    "react-highlight-words": "^0.18.0",
     "react-router-dom": "^6.3.0",
     "react-scripts": "5.0.1",
     "stellar-sdk": "^10.0.1",

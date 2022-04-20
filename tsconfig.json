@@ -21,7 +21,8 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@cosmic-plus/loopcall": ["typings/loopcall"]
+      "@cosmic-plus/loopcall": ["typings/loopcall"],
+      "react-highlight-words": ["typings/react-highlight-words"]
     }
   },
   "include": [

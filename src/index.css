@@ -11,3 +11,24 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.jpegdaologo {
+  float: left;
+  background-image: url("/public/jpegdao.png");
+  height: 56px;
+  width: 120px;
+  background-size: 56px 56px;
+  background-repeat: no-repeat;
+  margin: 4px;
+}
+
+.pageHeader {
+  position: fixed;
+  z-index: 1;
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+.pageContent {
+  margin-top: 64px;
+}

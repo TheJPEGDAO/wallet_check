@@ -1,8 +1,9 @@
-import {AutoComplete, AutoCompleteProps} from "antd";
+import {AutoComplete, AutoCompleteProps, Col, Input, InputProps, Row, Space} from "antd";
 import { DefaultOptionType } from "antd/lib/select";
 import {useMemo, useState} from "react";
 import {server} from "./common";
 import {ServerApi} from "stellar-sdk";
+import Highlighter from "react-highlight-words";
 type AssetRecord = ServerApi.AssetRecord;
 
 const getDomainFromAssetRecord = (asset: AssetRecord): string => {
@@ -20,9 +21,12 @@ const AssetSearch = (props: AutoCompleteProps) => {
     const [assets, setAssets] = useState<DefaultOptionType[]>([]);
     const [search, setSearch] = useState<string>("");
 
-    const searchAssets = (search: string) =>  {
-        setSearch(search);
-        server.assets().forCode(search).call()
+    const searchAssets = (searchString: string) =>  {
+        setSearch(searchString);
+        const assetCode = searchString.includes(":")
+            ? searchString.substring(0, searchString.indexOf(":"))
+            : searchString;
+        server.assets().forCode(assetCode).call()
             .then(({records}) => records.map(r => ({
                 label: r.asset_code + " * "+getDomainFromAssetRecord(r)+" ("+r.asset_issuer.substring(0, 5)+"..."+r.asset_issuer.substring(52)+")",
                 value: r.asset_code + ":" + r.asset_issuer
@@ -34,7 +38,13 @@ const AssetSearch = (props: AutoCompleteProps) => {
 
     const options = useMemo(() => assets
             .filter(a => a.value!.toString().includes(search))
-            .map(option => ({label: option.label, value: option.value}))
+            .map(option => ({
+                label: <Highlighter
+                    searchWords={[search]}
+                    autoEscape={true}
+                    textToHighlight={option.label}
+                />,
+                value: option.value}))
     , [search, assets]);
 
     return <AutoComplete
