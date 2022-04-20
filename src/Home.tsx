@@ -37,8 +37,14 @@ const Home = () => {
     const downloadSnapshotLink = useRef<HTMLAnchorElement>(null);
 
     const compileSnapshot = useCallback((): SnapshotData => {
-        return {threshold: threshold??0, accounts: getAccounts.accounts, asset: checkAsset?{code: checkAsset.code, issuer: checkAsset.issuer}:{}, updated: new Date()};
-    }, [threshold, checkAsset, getAccounts.accounts]);
+        return {
+            threshold: threshold??0,
+            accounts: getAccounts.accounts,
+            count: getAccounts.count,
+            asset: checkAsset?{...checkAsset}:{},
+            updated: new Date()
+        };
+    }, [threshold, checkAsset, getAccounts.accounts, getAccounts.count]);
 
     const downloadJson = () => {
         const url = window.URL.createObjectURL(
@@ -47,7 +53,7 @@ const Home = () => {
         if (downloadSnapshotLink.current) {
             downloadSnapshotLink.current.href = url;
             downloadSnapshotLink.current.setAttribute("download", "snapshot_"+(new Date().valueOf()/1000).toFixed()+".json")
-            //downloadSnapshotLink.current.click();
+            downloadSnapshotLink.current.click();
         }
 
         //window.open(url)

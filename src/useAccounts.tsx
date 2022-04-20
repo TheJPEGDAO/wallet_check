@@ -74,7 +74,7 @@ export const getAccountsWithAssetBalanceOverThreshold = ({
                     console.warn("abort by signal");
                     return true;
                 }
-                if (limit !== undefined && limit >= count) {
+                if (limit !== undefined && limit <= count) {
                     console.log("account limit reached: ", limit);
                     return true;
                 }

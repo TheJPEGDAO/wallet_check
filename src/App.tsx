@@ -2,8 +2,10 @@ import React, {useMemo} from "react";
 import "./App.css";
 import {BrowserRouter, Navigate, Routes, Route, Link, useLocation} from "react-router-dom";
 import Home from "./Home";
-import {Layout, Menu} from "antd";
+import {Layout, Menu, Space} from "antd";
 import {Content, Footer, Header} from "antd/lib/layout/layout";
+import {InstagramOutlined, TwitterOutlined} from "@ant-design/icons";
+import Discord from "./discord";
 
 const applicationBasename = process.env.PUBLIC_URL + (process.env.PUBLIC_URL.endsWith("/") ? "" : "/");
 
@@ -52,10 +54,17 @@ const App = (): JSX.Element => {
                     </Routes>
                 </Content>
                 <Footer style={{ textAlign: 'center' }}>
-                    <p>A service by the <a href="https://thejpegdao.com" target="_blank" rel="noreferrer">JPEG DAO</a> on stellar network 🚀</p>
-                    <p>Follow us on <a href="https://twitter.com/thejpegdao" target="_blank" rel="noreferrer">twitter</a>, <a href={"https://instagram.com/thejpegdao/"}>Instagram</a></p>
-                    <p>Join our <a href="https://discord.gg/UbJvFUHnY2" target="_blank" rel="noreferrer">discord</a></p>
-                    <p>Contribute on <a href="https://github.com/thejpegdao" target="_blank" rel="noreferrer">github</a></p>
+                    <Space direction={"horizontal"} split={"|"} align={"baseline"}>
+                        <p>A service by the <a href="https://thejpegdao.com" target="_blank" rel="noreferrer">JPEG DAO</a> on the <a href="https://stellar.org" target="_blank" rel="noreferrer">stellar</a> network 🚀</p>
+                        <p>follow us on <a href="https://twitter.com/thejpegdao" target="_blank" rel="noreferrer"><TwitterOutlined /> twitter</a>&nbsp;&&nbsp;
+                            <a href={"https://instagram.com/thejpegdao/"}><InstagramOutlined /> Instagram</a></p>
+                        <p>join our <a href="https://discord.gg/UbJvFUHnY2" target="_blank" rel="noreferrer"><Discord /> discord</a></p>
+                        <p>collaborate on <a href="https://github.com/thejpegdao" target="_blank" rel="noreferrer">github</a></p>
+                    </Space>
+                    <br />
+                    <Space direction={"horizontal"}>
+                        The JPEG DAO is not affiliated or endorsed by SDF. This is not an official stellar product.
+                    </Space>
                 </Footer>
             </Layout>
 
