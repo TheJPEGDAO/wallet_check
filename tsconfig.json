@@ -32,8 +32,6 @@
     "compilerOptions": {
       "module": "nodenext",
       "isolatedModules": true,
-      "importHelpers": false,
-      "allowSyntheticDefaultImports": false,
     }
   }
 }
