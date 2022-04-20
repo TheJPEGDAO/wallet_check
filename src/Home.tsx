@@ -6,7 +6,7 @@ import {Button, Col, Descriptions, Input, PageHeader, Row, Table} from "antd";
 import BigNumber from "bignumber.js";
 import AssetSearch from "./AssetSearch";
 import {assetToString, getStellarAsset} from "./common";
-import {FileTextOutlined, TableOutlined} from '@ant-design/icons';
+import {CameraOutlined, FileTextOutlined} from '@ant-design/icons';
 import SnapshotData from "./SnapshotData";
 
 
@@ -89,11 +89,11 @@ const Home = () => {
             /></Col>
             <Col flex={"20px"}/>
             <Col><Button
-                icon={<TableOutlined />}
+                icon={<CameraOutlined />}
                 loading={getAccounts.loading}
                 onClick={() => getAccounts.search()}
                 disabled={!checkAsset || undefined === threshold}
-            >Get accounts</Button></Col>
+            >Take accounts snapshot</Button></Col>
             <Col flex={"20px"}/>
         </Row>
 
