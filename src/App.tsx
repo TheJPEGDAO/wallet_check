@@ -52,10 +52,10 @@ const App = (): JSX.Element => {
                     </Routes>
                 </Content>
                 <Footer style={{ textAlign: 'center' }}>
-                    <p>A service by the <a href={"https://thejpegdao.com"} target={"_blank"} rel={"_noref"}>JPEG DAO</a> on stellar network 🚀</p>
-                    <p>Follow us on <a href={"https://twitter.com/thejpegdao"} target={"_blank"} rel={"_noref"}>twitter</a>, <a href={"https://instagram.com/thejpegdao/"}>Instagram</a></p>
-                    <p>Join our <a href={"https://discord.gg/UbJvFUHnY2"} target={"_blank"} rel={"_noref"}>discord</a></p>
-                    <p>Contribute on <a href={"https://github.com/thejpegdao"} target={"_blank"} rel={"_noref"}>github</a></p>
+                    <p>A service by the <a href="https://thejpegdao.com" target="_blank" rel="noreferrer">JPEG DAO</a> on stellar network 🚀</p>
+                    <p>Follow us on <a href="https://twitter.com/thejpegdao" target="_blank" rel="noreferrer">twitter</a>, <a href={"https://instagram.com/thejpegdao/"}>Instagram</a></p>
+                    <p>Join our <a href="https://discord.gg/UbJvFUHnY2" target="_blank" rel="noreferrer">discord</a></p>
+                    <p>Contribute on <a href="https://github.com/thejpegdao" target="_blank" rel="noreferrer">github</a></p>
                 </Footer>
             </Layout>
 
