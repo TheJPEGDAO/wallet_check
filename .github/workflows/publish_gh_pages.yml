@@ -2,8 +2,8 @@ name: publish to github-pages
 
 on:
   workflow_dispatch:
-#  schedule:
-#    - cron: '0/30 * * * *'
+  schedule:
+    - cron: '3 0 1 * *'
   push:
     branches:
       - main
@@ -31,7 +31,7 @@ jobs:
           cp gh_pages/snapshots/*.json public/snapshots
       - name: Take member snapshot
         run: npm snapshot
-        if: github.event.schedule != ''
+        if:  ${{ github.event.schedule != '' }}
         continue-on-error: true
         env:
           SNAPSHOT_ASSET: ${{ secrets.SNAPSHOT_ASSET }}
