@@ -32,7 +32,7 @@
     "test": "craco test",
     "eject": "craco eject",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -a -d build",
+    "deploy": "gh-pages -d build",
     "snapshot": "npx ts-node --preferTsExts scripts/Snapshot.tsx"
   },
   "eslintConfig": {
