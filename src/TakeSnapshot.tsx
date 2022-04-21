@@ -2,13 +2,14 @@ import 'antd/dist/antd.css';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {Asset} from "stellar-sdk";
 import useAccounts, {AccountRecord} from "./useAccounts";
-import {Button, Col, Descriptions, Input, notification, PageHeader, Row, Table} from "antd";
+import {Button, Carousel, Col, Descriptions, Input, notification, PageHeader, Row, Table} from "antd";
 import BigNumber from "bignumber.js";
 import AssetSearch from "./AssetSearch";
 import {assetToString, getStellarAsset} from "./common";
-import {CameraOutlined, CopyOutlined, FileTextOutlined} from '@ant-design/icons';
+import {CameraOutlined, ClearOutlined, CopyOutlined, FileTextOutlined} from '@ant-design/icons';
 import SnapshotData from "./SnapshotData";
 import {CopyToClipboard} from "react-copy-to-clipboard";
+import {CarouselRef} from "antd/lib/carousel";
 
 
 const TakeSnapshot = () => {
@@ -61,6 +62,12 @@ const TakeSnapshot = () => {
         return getAccounts.accounts.map(account => account.id).join("\n");
     }, [getAccounts.accounts]);
 
+    const carouselRef = useRef<CarouselRef>(null);
+
+    useEffect(() => {
+        carouselRef.current?.goTo(getAccounts.count > 0 ? 1 : 0);
+    }, [getAccounts.count]);
+
     return <>
         <PageHeader
             title="Dynamic Snapshot"
@@ -84,7 +91,7 @@ const TakeSnapshot = () => {
 
 
         <Row gutter={[10, 0]}>
-            <Col flex={"20px"}/>
+            <Col flex={"30px"}/>
             <Col><label htmlFor={"assetSearch"}>Asset: </label></Col>
             <Col flex={"auto"}>
                 <AssetSearch
@@ -94,31 +101,47 @@ const TakeSnapshot = () => {
                     onClear={() => setCheckAsset(undefined)}
                     placeholder={"search by asset code for snapshot (e.g. JPEG)"}
                     onSelect={(value: string) => setCheckAsset(getStellarAsset(value))}
+                    disabled={getAccounts.loading || getAccounts.count > 0}
                 />
             </Col>
             <Col flex={"20px"}/>
-            <Col><label>Minimum amount:</label></Col>
+            <Col><label>Min. amount:</label></Col>
             <Col><Input
                 placeholder={"Threshold amount"}
                 type={"number"}
-                onChange={(e) => {if(!!checkAsset) {setThreshold(Math.max(0, parseInt(e.target.value))); }}}
-                disabled={!checkAsset}
+                onChange={(e) => {if(!!checkAsset) {setThreshold(e.target.value === ''?undefined:Math.max(0, parseInt(e.target.value))); }}}
+                disabled={!checkAsset || getAccounts.loading || getAccounts.count > 0}
                 value={!!checkAsset?threshold:undefined}
             /></Col>
             <Col flex={"20px"}/>
-            <Col><Button
-                icon={<CameraOutlined />}
-                loading={getAccounts.loading}
-                onClick={() => getAccounts.search()}
-                disabled={!checkAsset || undefined === threshold}
-            >Take accounts snapshot</Button></Col>
-            <Col flex={"20px"}/>
+            <Col>
+                <div>
+                <Carousel autoplay={false} effect={"fade"} dots={false} ref={carouselRef} style={{maxWidth: 165}}>
+                    <Button
+                        icon={<CameraOutlined />}
+                        loading={getAccounts.loading}
+                        onClick={() => getAccounts.search()}
+                        disabled={!checkAsset || undefined === threshold || getAccounts.count < 0}
+                    >Take snapshot</Button>
+                    <Button
+                        icon={<ClearOutlined />}
+                        onClick={() => getAccounts.clear()}
+                        disabled={getAccounts.count <= 0}
+                    >Clear results</Button>
+                </Carousel>
+                </div>
+            </Col>
+            <Col flex={"30px"}/>
         </Row>
 
         <Table<AccountRecord>
             rowKey={r => r.id}
-            dataSource={getAccounts.accounts}
+            dataSource={getAccounts.accounts.sort((a: AccountRecord, b: AccountRecord) => new BigNumber(b.balance).minus(a.balance).toNumber())}
             loading={getAccounts.loading}
+            pagination={{
+                position: ["bottomCenter"],
+                showTotal: (total, range) => <p>Showing {range[0]}-{range[1]} of <b>{total}</b> matching account{total>1?'s':''}</p>
+            }}
             footer={() =>
                 <Descriptions layout={"vertical"}>
                     <Descriptions.Item label={"Selected Asset"} contentStyle={{display: "block"}} span={2}>{assetToString(checkAsset)}</Descriptions.Item>

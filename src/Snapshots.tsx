@@ -10,6 +10,8 @@ export interface SnapshotIndexData {
     };
 }
 
+const sortIndexDataByDate = (a: SnapshotIndexData, b: SnapshotIndexData) => Date.parse(a.date) - Date.parse(b.date)
+
 const Snapshots = () => {
     return <>
         <PageHeader
@@ -21,19 +23,22 @@ const Snapshots = () => {
 
 
     <Table<SnapshotIndexData>
-        dataSource={snapshotsIndex}
+        dataSource={snapshotsIndex.sort(sortIndexDataByDate).reverse()}
         pagination={{hideOnSinglePage: true, position:["bottomCenter"]}}
         rowKey={(s) => s.date}
     >
-        <Table.Column
+        <Table.Column<SnapshotIndexData>
             title={"File"}
             dataIndex={"filename"}
             render={filename => <a href={filename}>{filename}</a>}
         />
-        <Table.Column
+        <Table.Column<SnapshotIndexData>
             title={"Snapshot date"}
             dataIndex={"date"}
             render={(date) => new Date(date).toLocaleString()}
+            sortDirections={["ascend"]}
+            showSorterTooltip={false}
+            sorter={sortIndexDataByDate}
             />
     </Table>
         </>

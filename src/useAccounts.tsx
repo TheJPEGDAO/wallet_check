@@ -32,6 +32,7 @@ interface UseAccountsState {
     loading: boolean;
     abort: () => void;
     search: () => void;
+    clear: () => void;
 }
 
 interface GetAssetsProps {
@@ -92,7 +93,8 @@ const useAccounts = (asset: Asset|undefined, threshold: number|undefined, limit?
         count: 0,
         loading: false,
         abort: () => { fetchAccountsAbortController.abort(); },
-        search: () => { setShouldSearch(true); }
+        search: () => { setShouldSearch(true); },
+        clear: () => { setState(p => ({...p, accounts: [], count: 0})) },
     });
 
     useEffect(() => {
