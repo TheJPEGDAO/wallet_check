@@ -1,8 +1,6 @@
 import {readdirSync, readFileSync, writeFileSync} from "fs";
 import {SnapshotIndexData} from "../src/Snapshots";
 
-
-
 const indexSnapshotFile = (filename: string, path: string): SnapshotIndexData|void => {
     try {
         const snapshotData = JSON.parse(readFileSync([path, filename].join("/"), "utf8"));

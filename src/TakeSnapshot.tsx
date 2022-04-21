@@ -2,12 +2,13 @@ import 'antd/dist/antd.css';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {Asset} from "stellar-sdk";
 import useAccounts, {AccountRecord} from "./useAccounts";
-import {Button, Col, Descriptions, Input, PageHeader, Row, Table} from "antd";
+import {Button, Col, Descriptions, Input, notification, PageHeader, Row, Table} from "antd";
 import BigNumber from "bignumber.js";
 import AssetSearch from "./AssetSearch";
 import {assetToString, getStellarAsset} from "./common";
-import {CameraOutlined, FileTextOutlined} from '@ant-design/icons';
+import {CameraOutlined, CopyOutlined, FileTextOutlined} from '@ant-design/icons';
 import SnapshotData from "./SnapshotData";
+import {CopyToClipboard} from "react-copy-to-clipboard";
 
 
 const TakeSnapshot = () => {
@@ -55,9 +56,10 @@ const TakeSnapshot = () => {
             downloadSnapshotLink.current.setAttribute("download", "snapshot_"+(new Date().valueOf()/1000).toFixed()+".json")
             downloadSnapshotLink.current.click();
         }
-
-        //window.open(url)
     }
+    const accountsList = useMemo(() => {
+        return getAccounts.accounts.map(account => account.id).join("\n");
+    }, [getAccounts.accounts]);
 
     return <>
         <PageHeader
@@ -65,6 +67,16 @@ const TakeSnapshot = () => {
             subTitle="Calculate a list of accounts that currently hold a certain amount of a given asset"
             extra={<>
                 <Button icon={<FileTextOutlined />} disabled={downloadsDisabled} onClick={() => downloadJson()}>Download .json</Button>
+                <CopyToClipboard text={accountsList} onCopy={(text, status) => {if (status) {
+                    notification.success({
+                        duration: 20,
+                        message: "Account IDs copied",
+                        description: <>{getAccounts.count} IDs copied. Head over to <a href="https://balances.lumens.space/account" target="_blank" rel="noreferrer">stellar claim</a> to send assets in a batch to them.</>,
+                    })
+                }}}>
+                    <Button icon={<CopyOutlined />} disabled={downloadsDisabled}>Copy account IDs</Button>
+                </CopyToClipboard>
+
                 {/*<Button icon={<FileExcelOutlined />} disabled={downloadsDisabled}>Download .csv</Button>*/}
                 <a style={{display: "none"}} href={"."} ref={downloadSnapshotLink}>Download snapshot</a>
             </>}
@@ -102,7 +114,6 @@ const TakeSnapshot = () => {
             >Take accounts snapshot</Button></Col>
             <Col flex={"20px"}/>
         </Row>
-
 
         <Table<AccountRecord>
             rowKey={r => r.id}

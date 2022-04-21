@@ -42,14 +42,15 @@ const App = (): JSX.Element => {
                         activeKey={activeMenuKey}
                     >
                         <Menu.Item key={"nav:snapshot"}><Link to={"/snapshot"}>Take a snapshot</Link></Menu.Item>
-                        <Menu.Item key={"nav:snapshots"}><Link to={"/snapshots"}>Show recent snapshots</Link></Menu.Item>
+                        <Menu.Item key={"nav:snapshots"}><Link to={"/snapshots/"}>Show recent snapshots</Link></Menu.Item>
                     </Menu>
                 </Header>
                 <Content className={"pageContent"}>
                     <Routes>
-                        {<Route path={"/"} element={<Navigate to="/snapshot" replace/>}/>}
-                        <Route path={"/snapshot"} element={<TakeSnapshot/>}/>
-                        <Route path={"/snapshots"} element={<Snapshots/>}/>
+                        {<Route path={"/"} element={<Navigate to="/snapshot/" replace/>}/>}
+                        <Route path={"/snapshots"} element={<Navigate to="/snapshots/" replace/>}/>
+                        <Route path={"/snapshot/"} element={<TakeSnapshot/>}/>
+                        <Route path={"/snapshots/"} element={<Snapshots/>}/>
                         <Route path={"*"} element={<NotFound/>}/>
                     </Routes>
                 </Content>
