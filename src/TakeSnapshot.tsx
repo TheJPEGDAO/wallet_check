@@ -2,11 +2,11 @@ import 'antd/dist/antd.css';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {Asset} from "stellar-sdk";
 import useAccounts, {AccountRecord} from "./useAccounts";
-import {Button, Carousel, Col, Descriptions, Input, notification, PageHeader, Row, Table} from "antd";
+import {Button, Carousel, Col, Descriptions, Input, notification, PageHeader, Row, Table, Tag} from "antd";
 import BigNumber from "bignumber.js";
 import AssetSearch from "./AssetSearch";
 import {assetToString, getStellarAsset} from "./common";
-import {CameraOutlined, ClearOutlined, CopyOutlined, FileTextOutlined} from '@ant-design/icons';
+import {CameraOutlined, ClearOutlined, CopyOutlined, FileTextOutlined, GlobalOutlined} from '@ant-design/icons';
 import SnapshotData from "./SnapshotData";
 import {CopyToClipboard} from "react-copy-to-clipboard";
 import {CarouselRef} from "antd/lib/carousel";
@@ -29,8 +29,11 @@ const TakeSnapshot = () => {
         if (undefined === checkAsset && undefined !== threshold) {
             setThreshold(undefined);
         }
-        // eslint-disable-next-line
     }, [checkAsset, threshold]);
+
+    useEffect(() => {
+        setAssetDomain(undefined);
+    }, [checkAsset]);
 
     const downloadsDisabled = useMemo(() => {
         return getAccounts.loading || getAccounts.count === 0;
@@ -71,7 +74,7 @@ const TakeSnapshot = () => {
             carouselRef.current?.goTo(1);
         }
     }, [getAccounts.count, getAccounts.loading]);
-
+    const [assetDomain, setAssetDomain] = useState<string>();
     return <>
         <PageHeader
             title="Dynamic Snapshot"
@@ -108,6 +111,8 @@ const TakeSnapshot = () => {
                     onClear={() => setCheckAsset(undefined)}
                     placeholder={"search by asset code for snapshot (e.g. JPEG)"}
                     onSelect={(value: string) => setCheckAsset(getStellarAsset(value))}
+                    onDeselect={() => setAssetDomain(undefined)}
+                    hasDomain={setAssetDomain}
                     disabled={getAccounts.loading || getAccounts.count > 0}
                 />
             </Col>
@@ -151,7 +156,9 @@ const TakeSnapshot = () => {
             }}
             footer={() =>
                 <Descriptions layout={"vertical"}>
-                    <Descriptions.Item label={"Selected Asset"} contentStyle={{display: "block"}} span={2}>{assetToString(checkAsset)}</Descriptions.Item>
+                    <Descriptions.Item label={<>Selected Asset</>} contentStyle={{display: "block"}} span={2}>
+                        <p>{assetToString(checkAsset)}</p>
+                    </Descriptions.Item>
                     <Descriptions.Item label={"Desired threshold"}>{threshold}</Descriptions.Item>
                 </Descriptions>
             }
@@ -162,8 +169,9 @@ const TakeSnapshot = () => {
             />
             <Table.Column<AccountRecord>
                 dataIndex={"balance"}
-                title={checkAsset?.getCode()??""}
+                title={<>{checkAsset?.getCode()??""} {!!assetDomain&&<Tag icon={<GlobalOutlined />} color={"processing"}>{assetDomain}</Tag>}</>}
                 defaultSortOrder={getAccounts.loading?null:"descend"}
+                width={300}
                 sorter={(a, b) => new BigNumber(a.balance).minus(b.balance).toNumber()}
             />
         </Table>
