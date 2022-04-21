@@ -5,7 +5,7 @@ import TakeSnapshot from "./TakeSnapshot";
 import Snapshots from "./Snapshots";
 import {Layout, Menu, Space} from "antd";
 import {Content, Footer, Header} from "antd/lib/layout/layout";
-import {InstagramOutlined, TwitterOutlined} from "@ant-design/icons";
+import {GithubOutlined, InstagramOutlined, TwitterOutlined} from "@ant-design/icons";
 import Discord from "./discord";
 
 const applicationBasename = process.env.PUBLIC_URL + (process.env.PUBLIC_URL.endsWith("/") ? "" : "/");
@@ -60,7 +60,7 @@ const App = (): JSX.Element => {
                         <p>follow us on <a href="https://twitter.com/thejpegdao" target="_blank" rel="noreferrer"><TwitterOutlined /> twitter</a>&nbsp;&&nbsp;
                             <a href={"https://instagram.com/thejpegdao/"}><InstagramOutlined /> Instagram</a></p>
                         <p>join our <a href="https://discord.gg/UbJvFUHnY2" target="_blank" rel="noreferrer"><Discord /> discord</a></p>
-                        <p>collaborate on <a href="https://github.com/thejpegdao" target="_blank" rel="noreferrer">github</a></p>
+                        <p>collaborate on <a href="https://github.com/thejpegdao" target="_blank" rel="noreferrer"><GithubOutlined /> github</a></p>
                     </Space>
                     <br />
                     <Space direction={"horizontal"}>

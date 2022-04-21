@@ -65,8 +65,12 @@ const TakeSnapshot = () => {
     const carouselRef = useRef<CarouselRef>(null);
 
     useEffect(() => {
-        carouselRef.current?.goTo(getAccounts.count > 0 ? 1 : 0);
-    }, [getAccounts.count]);
+        if (getAccounts.loading || getAccounts.count <= 0) {
+            carouselRef.current?.goTo(0);
+        } else if (getAccounts.count > 0) {
+            carouselRef.current?.goTo(1);
+        }
+    }, [getAccounts.count, getAccounts.loading]);
 
     return <>
         <PageHeader
@@ -78,7 +82,10 @@ const TakeSnapshot = () => {
                     notification.success({
                         duration: 20,
                         message: "Account IDs copied",
-                        description: <>{getAccounts.count} IDs copied. Head over to <a href="https://balances.lumens.space/account" target="_blank" rel="noreferrer">stellar claim</a> to send assets in a batch to them.</>,
+                        description: <>
+                            {getAccounts.count} IDs copied.
+                            Head over to <a href="https://balances.lumens.space/account" target="_blank" rel="noreferrer">stellar claim</a> to send assets in a batch to them.
+                        </>,
                     })
                 }}}>
                     <Button icon={<CopyOutlined />} disabled={downloadsDisabled}>Copy account IDs</Button>
@@ -126,7 +133,7 @@ const TakeSnapshot = () => {
                     <Button
                         icon={<ClearOutlined />}
                         onClick={() => getAccounts.clear()}
-                        disabled={getAccounts.count <= 0}
+                        disabled={getAccounts.count <= 0 || getAccounts.loading}
                     >Clear results</Button>
                 </Carousel>
                 </div>
