@@ -11,7 +11,7 @@ const saveSnapshot = (data: SnapshotData): string => {
         if (!(e instanceof Object && e.hasOwnProperty("code") && (e as {code: string}).code === 'EEXIST'))
             throw e;
     }
-    const filename = getSnapshotFilename(data.updated);
+    const filename = "jpegdao-" + getSnapshotFilename(data.updated);
     writeFileSync(dir + filename, JSON.stringify(data));
 
     return dir + filename;

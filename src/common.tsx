@@ -17,5 +17,5 @@ export const assetToString = (asset?: Asset): string => {
 export const getSnapshotFilename = (date: Date, extension?: string): string => {
     const m = String(date.getUTCMonth()+1).padStart(2, '0');
     const d = String(date.getUTCDate()).padStart(2, '0');
-    return `${date.getUTCFullYear()}-${m}-${d}.${extension??'json'}`;
+    return `snapshot-${date.getUTCFullYear()}-${m}-${d}.${extension??'json'}`;
 }
