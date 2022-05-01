@@ -12,12 +12,17 @@ const indexSnapshotFile = (filename: string, path: string): SnapshotIndexData|vo
     } catch {}
 }
 
-const indexSnapshots = () => {
+const getSnapshotsIndex = (): SnapshotIndexData[] => {
     const snapshotFolder = "public/snapshots";
-    const snapshots: SnapshotIndexData[] = readdirSync(snapshotFolder, "utf8")
+    return readdirSync(snapshotFolder, "utf8")
         .map(f => indexSnapshotFile(f, snapshotFolder))
-        .filter((snapshotIndex): snapshotIndex is SnapshotIndexData  => !!snapshotIndex)
-    writeFileSync("src/snapshots_index.json", JSON.stringify(snapshots))
+        .filter((snapshotIndex): snapshotIndex is SnapshotIndexData => !!snapshotIndex);
+}
+
+const indexSnapshots = () => {
+    const f = getSnapshotsIndex()
+    console.log(f)
+    writeFileSync("src/snapshots_index.json", JSON.stringify(f));
 };
 indexSnapshots();
-export {}
+export {getSnapshotsIndex};

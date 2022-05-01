@@ -3,7 +3,7 @@ name: publish to github-pages
 on:
   workflow_dispatch:
   schedule:
-    - cron: '3 0 1 * *'
+    - cron: '3 * 1 * *'
   push:
     branches:
       - main
