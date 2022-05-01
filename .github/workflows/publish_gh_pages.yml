@@ -31,7 +31,7 @@ jobs:
         run: |
           cp gh_pages/snapshots/*.json public/snapshots
       - name: Take member snapshot
-        run: npm snapshot
+        run: npm run snapshot
         if:  ${{ github.event.schedule != '' }}
         continue-on-error: true
         env:
