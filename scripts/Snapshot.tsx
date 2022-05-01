@@ -25,7 +25,7 @@ const getSnapshot = (): Promise<SnapshotData> => {
         {
             asset: asset,
             threshold: threshold,
-            limit: 10,
+            //limit: 10,
             onStep: a => {console.log(accounts, a); accounts.push(a);},
         }
     )
