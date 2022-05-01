@@ -1,5 +1,5 @@
 import BigNumber from "bignumber.js";
-import {AccountCredited, WithdrawLiquidityEffect} from "stellar-sdk/lib/types/effects";
+import {AccountCredited, DepositLiquidityEffect, WithdrawLiquidityEffect} from "stellar-sdk/lib/types/effects";
 import {checkMembershipStepFn, isAssetRecordJPEG, JPEGAsset} from "./index";
 import SnapshotData from "../SnapshotData";
 import {ServerApi} from "stellar-sdk";
@@ -19,7 +19,7 @@ const checkEffects = (account: string, from: Date, to: Date, onStep: () => void)
             onStep();
             if (isAssetRecordJPEG(record as OfferAsset)) return true;
         }
-        if (['liquidity_pool_withdrew'].some(e => e === record.type)) {
+        if (['liquidity_pool_withdrew', "liquidity_pool_deposited"].some(e => e === record.type)) {
 
             if ((record as unknown as WithdrawLiquidityEffect).liquidity_pool!.reserves
                 .some(lpr => getStellarAsset(lpr.asset).equals(JPEGAsset))) {
@@ -52,6 +52,11 @@ export const checkAEffects: stepFnCheckEffects = ({account, snapshot}, onStep) =
     )
         //.then(effects => effects.reverse())
         .then(effects => effects.map(e => {
+            if (e.type === 'liquidity_pool_deposited') {
+                const amount = (e as unknown as DepositLiquidityEffect).reserves_deposited
+                    .find(lpr => getStellarAsset(lpr.asset).equals(JPEGAsset))!.amount;
+                return new BigNumber(amount);
+            }
             if (e.type === 'liquidity_pool_withdrew') {
                 const amount = (e as unknown as WithdrawLiquidityEffect).reserves_received
                     .find(lpr => getStellarAsset(lpr.asset).equals(JPEGAsset))!.amount;

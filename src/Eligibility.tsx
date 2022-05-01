@@ -8,7 +8,7 @@ import {useHref} from "react-router-dom";
 import SnapshotData from "./SnapshotData";
 import {AccountState, ResolveCheckMembershipStep, StepStatus} from "./CheckMembership";
 import checkAccount from "./CheckMembership/checkAccount";
-import {ClearOutlined} from "@ant-design/icons";
+import {ClearOutlined, LoadingOutlined} from "@ant-design/icons";
 import checkSnapshot from "./CheckMembership/checkSnapshot";
 import {checkAEffects} from "./CheckMembership/checkEffects";
 
@@ -111,6 +111,7 @@ const Eligibility = () => {
         }
         previousStep.current = stepsState.current;
         if (stepsState.current >= steps.length) return;
+        if (stepsState.current !== steps.length -1) setBalanceLow(undefined);
         steps[stepsState.current]()
             .catch(error => {
                 if (error.hasOwnProperty("status") && error.hasOwnProperty("reason")) {
@@ -178,7 +179,6 @@ const Eligibility = () => {
                     percent={stepsState.progress}
                     current={stepsState.current}
                     status={stepsState.status}
-
                 >
                     <Steps.Step
                         title="Account"
@@ -189,6 +189,8 @@ const Eligibility = () => {
                         description={(stepsState.current===1?stepsState.message:undefined)
                             ??"Check if the account is included in the snapshot taken on " + new Date(getSortedSnapshotIndex(snapshotsIndex)[0].date).toLocaleDateString()} />
                     <Steps.Step
+                        status={stepsState.current===2&&stepsState.status==="process"?"finish":undefined}
+                        icon={stepsState.current===2&&stepsState.status==="process"?<LoadingOutlined />:undefined}
                         title="Holding threshold"
                         description={(stepsState.current===2?stepsState.message:undefined)
                             ??"Check if account went below threshold since " + startTime.toLocaleDateString()} />
