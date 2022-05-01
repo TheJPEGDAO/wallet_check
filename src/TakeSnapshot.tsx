@@ -64,7 +64,10 @@ const TakeSnapshot = () => {
     const accountsList = useMemo(() => {
         return getAccounts.accounts.map(account => account.id).join("\n");
     }, [getAccounts.accounts]);
-
+    const [copied, setCopied] = useState<boolean>();
+    useEffect(() => {
+        if (copied) setTimeout(() => setCopied(false), 1500);
+    }, [copied]);
     const carouselRef = useRef<CarouselRef>(null);
 
     useEffect(() => {
@@ -80,19 +83,24 @@ const TakeSnapshot = () => {
             title="Dynamic Snapshot"
             subTitle="Calculate a list of accounts that currently hold a certain amount of a given asset"
             extra={<>
-                <Button icon={<FileTextOutlined />} disabled={downloadsDisabled} onClick={() => downloadJson()}>Download .json</Button>
-                <CopyToClipboard text={accountsList} onCopy={(text, status) => {if (status) {
-                    notification.success({
-                        duration: 20,
-                        message: "Account IDs copied",
-                        description: <>
-                            {getAccounts.count} IDs copied.
-                            Head over to <a href="https://balances.lumens.space/account" target="_blank" rel="noreferrer">stellar claim</a> to send assets in a batch to them.
-                        </>,
-                    })
-                }}}>
-                    <Button icon={<CopyOutlined />} disabled={downloadsDisabled}>Copy account IDs</Button>
+                <CopyToClipboard text={accountsList} onCopy={(text, status) => {
+                    setCopied(status);
+                    if (status) {
+                        notification.success({
+                            placement: "topLeft",
+                            duration: 20,
+                            message: "Account IDs copied",
+                            description: <>
+                                {getAccounts.count} IDs copied.
+                                Head over to <a href="https://balances.lumens.space/account" target="_blank"
+                                                rel="noreferrer">stellar claim</a> to send assets in a batch to them.
+                            </>,
+                        })
+                    }
+                }}>
+                    <Button icon={<CopyOutlined />} disabled={downloadsDisabled||copied}>{!copied?"Copy account IDs":"IDs copied"}</Button>
                 </CopyToClipboard>
+                <Button icon={<FileTextOutlined />} disabled={downloadsDisabled} onClick={() => downloadJson()}>Download .json</Button>
 
                 {/*<Button icon={<FileExcelOutlined />} disabled={downloadsDisabled}>Download .csv</Button>*/}
                 <a style={{display: "none"}} href={"."} ref={downloadSnapshotLink}>Download snapshot</a>

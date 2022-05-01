@@ -7,6 +7,7 @@ import {Layout, Menu, Space} from "antd";
 import {Content, Footer, Header} from "antd/lib/layout/layout";
 import {GithubOutlined, InstagramOutlined, TwitterOutlined} from "@ant-design/icons";
 import Discord from "./discord";
+import Eligibility from "./Eligibility";
 
 const applicationBasename = process.env.PUBLIC_URL + (process.env.PUBLIC_URL.endsWith("/") ? "" : "/");
 
@@ -43,6 +44,7 @@ const App = (): JSX.Element => {
                     >
                         <Menu.Item key={"nav:snapshot"}><Link to={"/snapshot"}>Take a snapshot</Link></Menu.Item>
                         <Menu.Item key={"nav:snapshots"}><Link to={"/snapshots/"}>Show recent snapshots</Link></Menu.Item>
+                        <Menu.Item key={"nav:member"}><Link to={"/member/"}>Check account membership</Link></Menu.Item>
                     </Menu>
                 </Header>
                 <Content className={"pageContent"}>
@@ -51,6 +53,7 @@ const App = (): JSX.Element => {
                         <Route path={"/snapshots"} element={<Navigate to="/snapshots/" replace/>}/>
                         <Route path={"/snapshot/"} element={<TakeSnapshot/>}/>
                         <Route path={"/snapshots/"} element={<Snapshots/>}/>
+                        <Route path={"/member/"} element={<Eligibility/>}/>
                         <Route path={"*"} element={<NotFound/>}/>
                     </Routes>
                 </Content>

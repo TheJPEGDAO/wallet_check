@@ -1,11 +1,11 @@
 import {AccountRecord} from "./useAccounts";
 
-interface Asset {
+type Asset = {
     issuer?: string;
     code?: string;
 }
 
-interface SnapshotData {
+type SnapshotData = {
     updated: Date;
     asset: Asset;
     threshold: number;

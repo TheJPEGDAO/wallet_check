@@ -1,5 +1,6 @@
 import snapshotsIndex from "./snapshots_index.json";
 import {PageHeader, Table} from "antd";
+import {useHref} from "react-router-dom";
 
 export interface SnapshotIndexData {
     filename: string;
@@ -10,9 +11,12 @@ export interface SnapshotIndexData {
     };
 }
 
-const sortIndexDataByDate = (a: SnapshotIndexData, b: SnapshotIndexData) => Date.parse(a.date) - Date.parse(b.date)
+export const sortIndexDataByDate = (a: SnapshotIndexData, b: SnapshotIndexData) => Date.parse(a.date) - Date.parse(b.date)
+export const getSortedSnapshotIndex = (snapshotsIndex: SnapshotIndexData[]): SnapshotIndexData[] =>
+    snapshotsIndex.sort(sortIndexDataByDate).reverse();
 
 const Snapshots = () => {
+    const snapshotsBase = useHref("/snapshots/");
     return <>
         <PageHeader
             title="Recent Snapshots"
@@ -30,7 +34,7 @@ const Snapshots = () => {
         <Table.Column<SnapshotIndexData>
             title={"File"}
             dataIndex={"filename"}
-            render={filename => <a href={filename}>{filename}</a>}
+            render={filename => <a href={snapshotsBase+filename}>{filename}</a>}
         />
         <Table.Column<SnapshotIndexData>
             title={"Snapshot date"}
