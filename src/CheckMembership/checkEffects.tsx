@@ -10,7 +10,7 @@ import {getStellarAsset, server} from "../common";
 type stepFnCheckEffects = checkMembershipStepFn<{
     account: string;
     snapshot: SnapshotData;
-}, [{balanceLow: string}?]>;
+}, [{balanceLow: BigNumber}?]>;
 
 const checkEffects = (account: string, from: Date, to: Date, onStep: () => void): Promise<ServerApi.EffectRecord[]> => {
     const filter = (record: ServerApi.EffectRecord) => {
@@ -80,7 +80,7 @@ export const checkAEffects: stepFnCheckEffects = ({account, snapshot}, onStep) =
             return ({
                 account: account,
                 activities: amounts.length,
-                low: reduced.low.toString(),
+                low: reduced.low,
                 calculated: reduced.balance.toString(),
                 start: balances[0].toString(),
                 //end: balances[1].toString()

@@ -1,4 +1,4 @@
-import {Col, Input, PageHeader, Row, Steps} from "antd";
+import {Avatar, Col, Collapse, Image, Input, PageHeader, Row, Select, Steps} from "antd";
 import React, {ChangeEvent, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {Keypair} from "stellar-sdk";
 import snapshotsIndex from "./snapshots_index.json";
@@ -11,7 +11,10 @@ import checkAccount from "./CheckMembership/checkAccount";
 import {ClearOutlined, LoadingOutlined} from "@ant-design/icons";
 import checkSnapshot from "./CheckMembership/checkSnapshot";
 import {checkAEffects} from "./CheckMembership/checkEffects";
-
+import BigNumber from "bignumber.js";
+import logoSilver from "./silver.gif";
+import logoGold from "./gold.gif";
+import logoJPEG from "./JPEG.png";
 
 type State = {
     account?: string;
@@ -41,6 +44,12 @@ const Eligibility = () => {
         setState(p => ({...p, account: e.target.value}));
     };
     const snapshotsBase = useHref("/snapshots/");
+    const jpegSnapshots = useMemo(() => {
+        return snapshotsIndex
+            .filter(item => isJPEG(item.asset.code, item.asset.issuer));
+    }, []);
+    const [selectedSnapshotIndex, setSelectedSnapshotIndex] = useState<number>();
+
     const [snapshot, setSnapshot] = useState<SnapshotData>();
 
     const step1 = useMemo(() => {
@@ -63,12 +72,10 @@ const Eligibility = () => {
     }, [state.account]);
 
     const step2 = () => {
-        const snapshots = snapshotsIndex
-            .filter(item => isJPEG(item.asset.code, item.asset.issuer));
         return checkSnapshot(
             {
                 base: snapshotsBase,
-                snapshotsIndexData: getSortedSnapshotIndex(snapshots)[0],
+                snapshotsIndexData: getSortedSnapshotIndex(jpegSnapshots)[selectedSnapshotIndex??0],
                 accountId: state.account!
             },
             (progress, status, snapshotData) => {
@@ -79,7 +86,8 @@ const Eligibility = () => {
             }
         );
     };
-    const [balanceLow, setBalanceLow] = useState<string>();
+
+    const [balanceLow, setBalanceLow] = useState<BigNumber>();
     const step3 = useCallback(() => {
             return checkAEffects(
                 {account: state.account!, snapshot: snapshot!},
@@ -143,8 +151,39 @@ const Eligibility = () => {
         }
     }, [stepsState.status]);
 
-    const startTime = new Date(getSortedSnapshotIndex(snapshotsIndex)[0].date);
-    startTime.setUTCMonth(startTime.getUTCMonth()-1);
+    const [startTime, endTime] = useMemo(() => {
+        if (undefined === selectedSnapshotIndex) return [undefined, undefined];
+        const end = new Date(getSortedSnapshotIndex(snapshotsIndex)[selectedSnapshotIndex].date);
+        const start = new Date(getSortedSnapshotIndex(snapshotsIndex)[selectedSnapshotIndex].date);
+        start.setUTCMonth(end.getUTCMonth()-1);
+        return [start, end];
+    }, [selectedSnapshotIndex]);
+
+    const getMembershipIcon = useMemo(() => {
+        if (undefined === balanceLow || balanceLow.lt(10000)) {
+            return undefined;
+        }
+
+        return <Avatar
+            style={{border: "1px solid #1890ff"}}
+            shape={"circle"}
+            icon={<Image
+                height={30}
+                width={30}
+                src={(balanceLow.lt(100000)
+                        ? logoSilver
+                        : logoGold
+                )}
+                preview={false}
+            />}
+            size={32}
+        />
+    }, [balanceLow]);
+
+    useEffect(() => {
+        setStepsState({current: 0, status: undefined, progress: 0});
+    }, [selectedSnapshotIndex]);
+
     return <>
         <PageHeader
     title="Check JPEG membership"
@@ -152,9 +191,23 @@ const Eligibility = () => {
     extra={<>
     </>}/>
 
-
-        <Row gutter={[0, 16]}>
+        <Row gutter={[8, 0]} wrap={false}>
             <Col flex={1}/>
+            <Col flex={"200px"}>
+                <Select size="large"
+                        style={{width: "100%", textAlign: "left"}}
+                        placeholder={"Select a snapshot"}
+                        children={getSortedSnapshotIndex(jpegSnapshots).map((s, i) =>
+                                <Select.Option key={i} value={i}>
+                                    <img alt="JPEG logo" src={logoJPEG} height={16}/>&nbsp;
+                                    {new Date(s.date).toLocaleDateString()}
+                                </Select.Option>
+                        )}
+                        onSelect={(value: number) => {
+                            setSelectedSnapshotIndex(value)
+                        }}
+                />
+            </Col>
             <Col flex={"auto"}>
                 <Input
                     value={state?.account}
@@ -164,13 +217,19 @@ const Eligibility = () => {
                     status={state.accountStatus === AccountState.checking ? "warning" : state.accountStatus === AccountState.error ? "error" : ""}
                     placeholder={placeholderAddress}
                     type={"search"}
-                    disabled={stepsState.current!==0}
+                    disabled={stepsState.current!==0 || selectedSnapshotIndex === undefined}
                     suffix={stepsState.current!==0?<ClearOutlined  onClick={() => setState(p => ({...p, account: ""}))}/>:<></>}
                 />
             </Col>
             <Col flex={1}/>
         </Row>
         <Row style={{rowGap: 60}}><p>&nbsp;</p></Row>
+
+        {/* @ts-ignore*/}
+        <Collapse ghost={true} activeKey={state.account?.length ? "stepsPanel" : ""}>
+            {/* @ts-ignore*/}
+            <Collapse.Panel  showArrow={false} key={"stepsPanel"} header={<></>}>
+
         <Row justify={"center"} >
             <Col flex={"auto"} >
                 {/* @ts-ignore*/}
@@ -187,18 +246,19 @@ const Eligibility = () => {
                     <Steps.Step
                         title="Snapshot"
                         description={(stepsState.current===1?stepsState.message:undefined)
-                            ??"Check if the account is included in the snapshot taken on " + new Date(getSortedSnapshotIndex(snapshotsIndex)[0].date).toLocaleDateString()} />
+                            ??"Check if the account is included in the snapshot taken on " + endTime?.toLocaleDateString()} />
                     <Steps.Step
                         status={stepsState.current===2&&stepsState.status==="process"?"finish":undefined}
-                        icon={stepsState.current===2&&stepsState.status==="process"?<LoadingOutlined />:undefined}
+                        icon={stepsState.current===2&&stepsState.status==="process"?<LoadingOutlined />:(getMembershipIcon)}
                         title="Holding threshold"
                         description={(stepsState.current===2?stepsState.message:undefined)
-                            ??"Check if account went below threshold since " + startTime.toLocaleDateString()} />
-
+                            ??"Check if account went below threshold since " + startTime?.toLocaleDateString()} />
                 </Steps>
             </Col>
             <Col flex={"auto"}/>
         </Row>
+            </Collapse.Panel>
+        </Collapse>
         <Row align={"middle"} justify={"center"}>
             <Col flex={"auto"}>{
                 balanceLow && `The account ${state.account} held a minimum of ${balanceLow} JPEG in the period.`
