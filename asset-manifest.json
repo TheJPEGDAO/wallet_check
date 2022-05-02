@@ -1,13 +1,15 @@
 {
   "files": {
     "main.css": "/wallet_check/static/css/main.aed33f1b.css",
-    "main.js": "/wallet_check/static/js/main.de18c2d6.js",
+    "main.js": "/wallet_check/static/js/main.f6273069.js",
     "static/js/27.7e0ba2a2.chunk.js": "/wallet_check/static/js/27.7e0ba2a2.chunk.js",
+    "static/media/gold.gif": "/wallet_check/static/media/gold.18baf6137fdbe46e4b73.gif",
+    "static/media/silver.gif": "/wallet_check/static/media/silver.659cd7a72ccfe9bb0de1.gif",
     "static/media/jpegdao.png": "/wallet_check/static/media/jpegdao.3819ff4152369af0d2ae.png",
     "index.html": "/wallet_check/index.html"
   },
   "entrypoints": [
     "static/css/main.aed33f1b.css",
-    "static/js/main.de18c2d6.js"
+    "static/js/main.f6273069.js"
   ]
 }
