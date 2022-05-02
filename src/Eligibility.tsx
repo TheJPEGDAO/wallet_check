@@ -15,6 +15,7 @@ import BigNumber from "bignumber.js";
 import logoSilver from "./silver.gif";
 import logoGold from "./gold.gif";
 import logoJPEG from "./JPEG.png";
+import {checkPayment, CheckPayment} from "./CheckMembership/checkPayment";
 
 type State = {
     account?: string;
@@ -97,20 +98,50 @@ const Eligibility = () => {
                         setBalanceLow(balanceInfo.balanceLow);
                     }
                 })
-                .catch(() => setStepsState(p => ({...p, status: "finish"})))
-                .then(()=> true)
+                .catch(() => {
+                    setStepsState(p => ({...p, status: "finish"}));
+                    return {};
+                })
+                .then(() => true)
         }, [snapshot, state.account]);
 
-    const steps = useMemo<(() => ResolveCheckMembershipStep)[]>(() => [
+    const [payoutInfo, setPayoutInfo] = useState<Partial<CheckPayment>>();
+    const step4 = useCallback(() => {
+        const afterDate = new Date(snapshot?.updated??Date.now());
+        let beforeDate = new Date();
+        if (selectedSnapshotIndex) {
+            beforeDate = new Date(jpegSnapshots[selectedSnapshotIndex-1].date)
+        }
+        return checkPayment(
+            {
+                account: state.account,
+                afterDate,
+                beforeDate,
+            },
+            (progress, status) => {
+                setStepsState(p => ({...p, progress, status}));
+            }
+        )
+            .then((resolved) => {
+                if (typeof resolved === "object") {
+                    setPayoutInfo(resolved);
+                    return true;
+                }
+                return false;
+            });
+
+    }, [jpegSnapshots, selectedSnapshotIndex, snapshot?.updated, state.account]);
+
+    const steps = useMemo<(() => ResolveCheckMembershipStep<any>)[]>(() => [
         step1,
         step2,
         step3,
+        step4
         // eslint-disable-next-line
     ], [state.account, snapshot]);
 
     const previousStep = useRef<number>();
     useEffect(() => {
-        //console.log(stepsState)
         if (previousStep.current === stepsState.current && stepsState.current !== 0) {
             return;
         }
@@ -119,10 +150,13 @@ const Eligibility = () => {
         }
         previousStep.current = stepsState.current;
         if (stepsState.current >= steps.length) return;
-        if (stepsState.current !== steps.length -1) setBalanceLow(undefined);
+        if (stepsState.current <= steps.length -2) {
+            setBalanceLow(undefined);
+            setPayoutInfo(undefined);
+        }
         steps[stepsState.current]()
             .catch(error => {
-                if (error.hasOwnProperty("status") && error.hasOwnProperty("reason")) {
+                if (typeof error === "object" && error.hasOwnProperty("status") && error.hasOwnProperty("reason")) {
                     console.warn(error)
                     setStepsState(p => ({...p, status: error.status, message: error.reason}));
                 }
@@ -163,7 +197,6 @@ const Eligibility = () => {
         if (undefined === balanceLow || balanceLow.lt(10000)) {
             return undefined;
         }
-
         return <Avatar
             style={{border: "1px solid #1890ff"}}
             shape={"circle"}
@@ -229,34 +262,44 @@ const Eligibility = () => {
         <Collapse ghost={true} activeKey={state.account?.length ? "stepsPanel" : ""}>
             {/* @ts-ignore*/}
             <Collapse.Panel  showArrow={false} key={"stepsPanel"} header={<></>}>
-
-        <Row justify={"center"} >
-            <Col flex={"auto"} >
-                {/* @ts-ignore*/}
-                <Steps
-                    direction={"horizontal"}
-                    percent={stepsState.progress}
-                    current={stepsState.current}
-                    status={stepsState.status}
-                >
-                    <Steps.Step
-                        title="Account"
-                        description={(stepsState.current===0?stepsState.message:undefined)
-                            ??"Check if the account exists on stellar network"} />
-                    <Steps.Step
-                        title="Snapshot"
-                        description={(stepsState.current===1?stepsState.message:undefined)
-                            ??"Check if the account is included in the snapshot taken on " + endTime?.toLocaleDateString()} />
-                    <Steps.Step
-                        status={stepsState.current===2&&stepsState.status==="process"?"finish":undefined}
-                        icon={stepsState.current===2&&stepsState.status==="process"?<LoadingOutlined />:(getMembershipIcon)}
-                        title="Holding threshold"
-                        description={(stepsState.current===2?stepsState.message:undefined)
-                            ??"Check if account went below threshold since " + startTime?.toLocaleDateString()} />
-                </Steps>
-            </Col>
-            <Col flex={"auto"}/>
-        </Row>
+                <Row justify={"center"} >
+                    <Col flex={"auto"} >
+                        {/* @ts-ignore*/}
+                        <Steps
+                            direction={"horizontal"}
+                            percent={stepsState.progress}
+                            current={stepsState.current}
+                            status={stepsState.status}
+                        >
+                            <Steps.Step
+                                title="Account"
+                                description={(stepsState.current===0?stepsState.message:undefined)
+                                    ??"Check if the account exists on stellar network"} />
+                            <Steps.Step
+                                title="Snapshot"
+                                description={(stepsState.current === 1 ? stepsState.message : undefined)
+                                    ??"Check if the account is included in the snapshot taken on " + endTime?.toLocaleDateString()} />
+                            <Steps.Step
+                                status={(stepsState.current === 2 && stepsState.status === "process") ? "finish" : undefined}
+                                icon={(stepsState.current === 2 && stepsState.status === "process") ? <LoadingOutlined /> : getMembershipIcon}
+                                title="Holding threshold"
+                                description={(stepsState.current === 2 ? stepsState.message : undefined)
+                                    ??"Check if account went below threshold since " + startTime?.toLocaleDateString()} />
+                            <Steps.Step
+                                title={"Payout"}
+                                subTitle={"Has the account received the tokens?"}
+                                status={(stepsState.current === 3 && stepsState.status === "process") ? "finish" : undefined}
+                                icon={(stepsState.current === 3 && stepsState.status === "process") ? <LoadingOutlined /> : undefined}
+                                description={payoutInfo && <>
+                                    Payment was made {payoutInfo.date!.toLocaleDateString()}.<br/>
+                                    {payoutInfo.memo && <p>{payoutInfo.memo}</p>}
+                                    Show on <a href={"https://stellar.expert/explorer/public/tx/"+payoutInfo.txPage+'#'+payoutInfo.opId} rel={"noreferrer"} target={"_blank"}>stellar.expert</a>.
+                                </>}
+                                />
+                        </Steps>
+                    </Col>
+                    <Col flex={"auto"}/>
+                </Row>
             </Collapse.Panel>
         </Collapse>
         <Row align={"middle"} justify={"center"}>

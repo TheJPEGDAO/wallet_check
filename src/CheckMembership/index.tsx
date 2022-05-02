@@ -17,16 +17,16 @@ export const JPEGAsset = new Asset("JPEG", "GDZQGQFWKQQWJ7ACKK4DJKFQ7QQ5FXD3PEQB
 
 export type StepStatus = "error"|"wait"|"finish"|"process"|undefined;
 
-export type ResolveCheckMembershipStep = Promise<Partial<CheckMembershipState>|boolean>;
+export type ResolveCheckMembershipStep<R extends CheckMembershipState> = Promise<Partial<R>|boolean>;
 export type RejectPromiseMembershipStep = {
     reason: string;
     status: StepStatus & "error";
 };
 
-export type checkMembershipStepFn<ParamsType, AdditionalStepArgs extends any[] = [], ResolveAs extends ResolveCheckMembershipStep = ResolveCheckMembershipStep> = (
+export type checkMembershipStepFn<ParamsType, AdditionalStepArgs extends any[] = [], ResolveAs extends CheckMembershipState = CheckMembershipState> = (
     params: ParamsType,
     onStep: (progress: NumberRange<0, 101>, status: StepStatus, ...args: AdditionalStepArgs) => void
-) => ResolveAs;
+) => ResolveCheckMembershipStep<ResolveAs>;
 export type checkMembershipStepPromiseRejected = {
     status: StepStatus;
     message: string;
