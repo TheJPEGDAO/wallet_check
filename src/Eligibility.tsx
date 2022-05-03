@@ -156,8 +156,8 @@ const Eligibility = () => {
         }
         steps[stepsState.current]()
             .catch(error => {
+                console.warn(error)
                 if (typeof error === "object" && error.hasOwnProperty("status") && error.hasOwnProperty("reason")) {
-                    console.warn(error)
                     setStepsState(p => ({...p, status: error.status, message: error.reason}));
                 }
                 return false;
