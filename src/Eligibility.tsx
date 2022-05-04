@@ -107,11 +107,11 @@ const Eligibility = () => {
 
     const [payoutInfo, setPayoutInfo] = useState<Partial<CheckPayment>>();
     const step4 = useCallback(() => {
-        const afterDate = new Date(snapshot?.updated??Date.now());
-        let beforeDate = new Date();
-        if (selectedSnapshotIndex) {
-            beforeDate = new Date(jpegSnapshots[selectedSnapshotIndex-1].date)
-        }
+        const afterDate = new Date(jpegSnapshots[selectedSnapshotIndex??0].date);
+        const beforeDate = new Date(undefined !== selectedSnapshotIndex && selectedSnapshotIndex > 0
+            ? jpegSnapshots[selectedSnapshotIndex-1].date
+            : Date.now()
+        );
         return checkPayment(
             {
                 account: state.account,
@@ -130,7 +130,7 @@ const Eligibility = () => {
                 return false;
             });
 
-    }, [jpegSnapshots, selectedSnapshotIndex, snapshot?.updated, state.account]);
+    }, [jpegSnapshots, selectedSnapshotIndex, state.account]);
 
     const steps = useMemo<(() => ResolveCheckMembershipStep<any>)[]>(() => [
         step1,
