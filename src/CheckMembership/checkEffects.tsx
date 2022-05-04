@@ -12,7 +12,7 @@ type stepFnCheckEffects = checkMembershipStepFn<{
     snapshot: SnapshotData;
 }, [{balanceLow: BigNumber}?]>;
 
-const checkEffects = (account: string, from: Date, to: Date, onStep: () => void): Promise<ServerApi.EffectRecord[]> => {
+export const checkEffects = (account: string, from: Date, to: Date, onStep: () => void): Promise<BigNumber[]> => {
     const filter = (record: ServerApi.EffectRecord) => {
         if (to < new Date(record.created_at)) return false;
         if (['account_credited', 'account_debited'].some(e => e === record.type)) {
@@ -32,6 +32,22 @@ const checkEffects = (account: string, from: Date, to: Date, onStep: () => void)
     const breaker = (record: ServerApi.EffectRecord) => from > new Date(record.created_at);
 
     return loopcall(server.effects().forAccount(account).order("desc"), {filter, breaker})
+        .then((effects: ServerApi.EffectRecord[]) => effects.map(e => {
+            if (e.type === 'liquidity_pool_deposited') {
+                const amount = (e as unknown as DepositLiquidityEffect).reserves_deposited
+                    .find(lpr => getStellarAsset(lpr.asset).equals(JPEGAsset))!.amount;
+                return new BigNumber(amount);
+            }
+            if (e.type === 'liquidity_pool_withdrew') {
+                const amount = (e as unknown as WithdrawLiquidityEffect).reserves_received
+                    .find(lpr => getStellarAsset(lpr.asset).equals(JPEGAsset))!.amount;
+                return new BigNumber(amount).multipliedBy(-1);
+            }
+            const amount = new BigNumber((e as AccountCredited).amount);
+            return (e.type === 'account_credited'
+                ? amount.multipliedBy(-1)
+                : amount);
+        }))
 }
 
 
@@ -51,30 +67,17 @@ export const checkAEffects: stepFnCheckEffects = ({account, snapshot}, onStep) =
         () => {}
     )
         //.then(effects => effects.reverse())
-        .then(effects => effects.map(e => {
-            if (e.type === 'liquidity_pool_deposited') {
-                const amount = (e as unknown as DepositLiquidityEffect).reserves_deposited
-                    .find(lpr => getStellarAsset(lpr.asset).equals(JPEGAsset))!.amount;
-                return new BigNumber(amount);
-            }
-            if (e.type === 'liquidity_pool_withdrew') {
-                const amount = (e as unknown as WithdrawLiquidityEffect).reserves_received
-                    .find(lpr => getStellarAsset(lpr.asset).equals(JPEGAsset))!.amount;
-                return new BigNumber(amount).multipliedBy(-1);
-            }
-            const amount = new BigNumber((e as AccountCredited).amount);
-            return (e.type === 'account_credited'
-                ? amount.multipliedBy(-1)
-                : amount);
-        }))
+
         .then(amounts => {
             const initial = {low: balances[0], balance: balances[0]};
             const reduced = amounts
-                .map(a => ({balance: new BigNumber(a), low: new BigNumber(0)}))
-                .reduce((prev: { balance: BigNumber, low: BigNumber }, current: { balance: BigNumber, low: BigNumber }) => {
-                    const balance = prev.balance.plus(current.balance);
-                    const low = prev.low.lt(balance) ? prev.low : balance;
-                    return {low, balance};
+                //.map(a => ({balance: new BigNumber(a), low: new BigNumber(0)}))
+                .reduce((prev: { balance: BigNumber, low: BigNumber }, current: BigNumber) => {
+                    const balance = prev.balance.minus(current);
+                    return {
+                        balance,
+                        low: prev.low.lt(balance) ? prev.low : balance,
+                    };
                 }, initial);
 
             return ({
