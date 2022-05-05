@@ -1,6 +1,6 @@
 import {CheckMembershipState, checkMembershipStepFn} from "./index";
 import loopcall from "@cosmic-plus/loopcall";
-import {getStellarAsset, server} from "src/common";
+import {getStellarAsset, server} from "../common";
 import {Asset, ServerApi} from "stellar-sdk";
 import {TransactionCallBuilder} from "stellar-sdk/lib/transaction_call_builder";
 type TransactionRecord = ServerApi.TransactionRecord;
@@ -20,7 +20,7 @@ type stepFnCheckPayments = checkMembershipStepFn<{
 }, [], CheckPayment & CheckMembershipState>;
 
 const dropper = "GC2ILNJKC2OYCURIS3LK2IPNKLYZQBYXDO7MPGJO3Q5UHS3EBKSMJPEG";
-const tokenAsset = new Asset("0x1F3D4", dropper);
+export const MountainTokenAsset = new Asset("0x1F3D4", dropper);
 type Payment = ServerApi.PaymentOperationRecord | ServerApi.ClaimableBalanceRecord;
 
 
@@ -42,7 +42,7 @@ export const checkPayment: stepFnCheckPayments = async ({account, afterDate, bef
     const filterPayments = (r: ServerApi.PaymentOperationRecord|ServerApi.CreateAccountOperationRecord) => {
         if (r.type === "create_account") return false;
         if (beforeDate <= new Date(r.created_at)) return false;
-        found = r.from === dropper && tokenAsset.equals(getStellarAsset(r.asset_code+":"+r.asset_issuer));
+        found = r.from === dropper && MountainTokenAsset.equals(getStellarAsset(r.asset_code+":"+r.asset_issuer));
         return found;
     }
     type ClaimOrCreateCB = ServerApi.CreateClaimableBalanceOperationRecord|ServerApi.ClaimClaimableBalanceOperationRecord;
@@ -66,7 +66,7 @@ export const checkPayment: stepFnCheckPayments = async ({account, afterDate, bef
             return false;
         }
         console.log(beforeDate, cbCreated);
-        found = r.sponsor === dropper && tokenAsset.equals(getStellarAsset(cbCreated.asset));
+        found = r.sponsor === dropper && MountainTokenAsset.equals(getStellarAsset(cbCreated.asset));
         if (found) {
             (r as unknown as {transaction: () => Promise<TransactionRecord>}).transaction = cbCreated.transaction
             r.id = cbCreated.id;
@@ -99,7 +99,7 @@ export const checkPayment: stepFnCheckPayments = async ({account, afterDate, bef
     if (paymentInfo.length === 0) {
         console.log("checking CBs")
         const cbS = await loopcall(
-            server.claimableBalances().claimant(account).asset(tokenAsset).order("desc"),
+            server.claimableBalances().claimant(account).asset(MountainTokenAsset).order("desc"),
             {
                 filter: filterClaimableBalances,
                 breaker: loopcallBreaker,
