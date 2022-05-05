@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/wallet_check/static/css/main.aed33f1b.css",
-    "main.js": "/wallet_check/static/js/main.1fcfa431.js",
+    "main.js": "/wallet_check/static/js/main.c9fef093.js",
     "static/js/27.7e0ba2a2.chunk.js": "/wallet_check/static/js/27.7e0ba2a2.chunk.js",
     "static/media/gold.gif": "/wallet_check/static/media/gold.18baf6137fdbe46e4b73.gif",
     "static/media/silver.gif": "/wallet_check/static/media/silver.659cd7a72ccfe9bb0de1.gif",
@@ -10,6 +10,6 @@
   },
   "entrypoints": [
     "static/css/main.aed33f1b.css",
-    "static/js/main.1fcfa431.js"
+    "static/js/main.c9fef093.js"
   ]
 }
