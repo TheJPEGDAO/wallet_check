@@ -72,7 +72,7 @@ const Eligibility = () => {
             });
     }, [state.account]);
 
-    const step2 = () => {
+    const step2 = useCallback(() => {
         return checkSnapshot(
             {
                 base: snapshotsBase,
@@ -86,23 +86,22 @@ const Eligibility = () => {
                 }
             }
         );
-    };
+    }, [jpegSnapshots, selectedSnapshotIndex, snapshotsBase, state.account]);
 
     const [balanceLow, setBalanceLow] = useState<BigNumber>();
     const step3 = useCallback(() => {
             return checkAEffects(
-                {account: state.account!, snapshot: snapshot!},
+                {account: state.account!, snapshot: snapshot!, minThreshold: 10000},
                 (progress, status, balanceInfo) => {
-                    setStepsState(p => ({...p, status, progress}));
+                    let stepStatus = status;
                     if (balanceInfo) {
                         setBalanceLow(balanceInfo.balanceLow);
+                        if (balanceInfo.balanceLow.lt(10000)) {
+                            stepStatus = "error";
+                        }
                     }
+                    setStepsState(p => ({...p, status: stepStatus, progress, message: ""+p.current}));
                 })
-                .catch(() => {
-                    setStepsState(p => ({...p, status: "finish"}));
-                    return {};
-                })
-                .then(() => true)
         }, [snapshot, state.account]);
 
     const [payoutInfo, setPayoutInfo] = useState<Partial<CheckPayment>>();
@@ -138,7 +137,7 @@ const Eligibility = () => {
         step3,
         step4
         // eslint-disable-next-line
-    ], [state.account, snapshot]);
+    ], [state.account, selectedSnapshotIndex, snapshot]);
 
     const previousStep = useRef<number>();
     useEffect(() => {
@@ -150,7 +149,7 @@ const Eligibility = () => {
         }
         previousStep.current = stepsState.current;
         if (stepsState.current >= steps.length) return;
-        if (stepsState.current <= steps.length -2) {
+        if (stepsState.current <= steps.length - 2) {
             setBalanceLow(undefined);
             setPayoutInfo(undefined);
         }

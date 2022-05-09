@@ -16,6 +16,7 @@ import {Trade} from "stellar-sdk/lib/types/trade";
 type stepFnCheckEffects = checkMembershipStepFn<{
     account: string;
     snapshot: SnapshotData;
+    minThreshold: number;
 }, [{balanceLow: BigNumber}?]>;
 type LiquidityInteractionEffect = WithdrawLiquidityEffect|DepositLiquidityEffect|LiquidityPoolTradeEffect;
 
@@ -23,15 +24,11 @@ type LiquidityInteractionEffect = WithdrawLiquidityEffect|DepositLiquidityEffect
 const getTradeAmount = (tradeRecord: Trade): BigNumber => {
     if (tradeRecord.bought_asset_type === "credit_alphanum4"
         && JPEGAsset.equals(getStellarAsset(tradeRecord.bought_asset_code + ":" + tradeRecord.bought_asset_issuer))) {
-        return new BigNumber(tradeRecord.bought_amount).multipliedBy(
-            tradeRecord.account === tradeRecord.seller ? 1 : -1
-        );
+        return new BigNumber(tradeRecord.bought_amount);
     }
     if (tradeRecord.sold_asset_type === "credit_alphanum4"
         && JPEGAsset.equals(getStellarAsset(tradeRecord.sold_asset_code + ":" + tradeRecord.sold_asset_issuer))) {
-        return new BigNumber(tradeRecord.sold_amount).multipliedBy(
-            tradeRecord.account === tradeRecord.seller ? 1 : -1
-        ).negated();
+        return new BigNumber(tradeRecord.sold_amount).negated();
     }
     console.warn("not a JPEG trade")
     return new BigNumber(0);
@@ -81,18 +78,18 @@ export const checkEffects = (account: string, from: Date, to: Date, onStep: () =
             if (e.type === "liquidity_pool_deposited") {
                 const amount = (e as DepositLiquidityEffect).reserves_deposited
                     .find(lpr => getStellarAsset(lpr.asset).equals(JPEGAsset))!.amount;
-                res.amount = new BigNumber(amount);
+                res.amount = new BigNumber(amount).negated();
             }
             if (e.type === "liquidity_pool_withdrew") {
                 const amount = (e as WithdrawLiquidityEffect).reserves_received
                     .find(lpr => getStellarAsset(lpr.asset).equals(JPEGAsset))!.amount;
-                res.amount = new BigNumber(amount).negated();
+                res.amount = new BigNumber(amount);
             }
             if (["account_credited", "account_debited"].includes(e.type)) {
                 const amount = new BigNumber((e as AccountCredited).amount);
                 res.amount = (e.type === "account_credited"
-                    ? amount.negated()
-                    : amount);
+                    ? amount
+                    : amount.negated());
             }
             if ("trade" === e.type) {
                 res.amount = getTradeAmount(e as Trade);
@@ -100,10 +97,10 @@ export const checkEffects = (account: string, from: Date, to: Date, onStep: () =
             if (e.type === "liquidity_pool_trade") {
                 const tradeRecord = e as LiquidityPoolTradeEffect;
                 if (tradeRecord.bought.asset === assetToString(JPEGAsset)) {
-                    res.amount = new BigNumber(tradeRecord.bought.amount);
+                    res.amount = new BigNumber(tradeRecord.bought.amount).negated();
                 }
                 if (tradeRecord.sold.asset === assetToString(JPEGAsset)) {
-                    res.amount = new BigNumber(tradeRecord.sold.amount).negated();
+                    res.amount = new BigNumber(tradeRecord.sold.amount);
                 }
             }
             return res;
@@ -117,8 +114,9 @@ export const checkEffects = (account: string, from: Date, to: Date, onStep: () =
                 const keep = a.every(other => {
                     const currentOp = other.id.split("-")[0];
                     if (effectOp === currentOp) {
+                        //if (other.type === "trade" && !["account_credited", "account_debited"].includes(e.type)) return false;
                         if (other.type === e.type) return true;
-                        return !["account_credited", "account_debited"].includes(e.type);
+                        return !["account_credited", "account_debited"].includes(other.type);
                     }
                     return true;
                 });
@@ -126,7 +124,7 @@ export const checkEffects = (account: string, from: Date, to: Date, onStep: () =
                 return keep;
             })
         )
-        .then((e: {created_at: Date, amount: BigNumber, id: string}[]) => e
+        .then((effect: {created_at: Date, amount: BigNumber, id: string}[]) => effect
             .sort((a, b) => a.created_at.valueOf() - b.created_at.valueOf())
             .reverse()
             .map(i => {
@@ -136,8 +134,7 @@ export const checkEffects = (account: string, from: Date, to: Date, onStep: () =
         )
 }
 
-
-export const checkAEffects: stepFnCheckEffects = ({account, snapshot}, onStep) => {
+export const checkAEffects: stepFnCheckEffects = ({account, snapshot, minThreshold}, onStep) => {
     onStep(0, "process");
     const toDate = new Date(snapshot.updated);
     const fromDate = new Date(snapshot.updated);
@@ -156,7 +153,8 @@ export const checkAEffects: stepFnCheckEffects = ({account, snapshot}, onStep) =
             const initial = {low: balances[0], balance: balances[0]};
             const reduced = amounts
                 .reduce((prev: { balance: BigNumber, low: BigNumber }, current: BigNumber) => {
-                    const balance = prev.balance.plus(current);
+                    const balance = prev.balance.minus(current);
+                    if (DEBUG) console.log(prev.balance.toFormat() +" - (" + current.toFormat() + ") = " + balance.toFormat(), prev.low.toFormat())
                     return {
                         balance,
                         low: prev.low.lt(balance) ? prev.low : balance,
@@ -172,8 +170,11 @@ export const checkAEffects: stepFnCheckEffects = ({account, snapshot}, onStep) =
             })
         })
         .then(({low}) => {
-            onStep(100, "finish", {balanceLow: low});
-            return true;
+            if (low.gte(minThreshold)) {
+                onStep(100, "finish", {balanceLow: low});
+                return true;
+            }
+            throw new Error("Threshold ("+low.toFormat()+") below membership levels");
         })
         .catch((e) => Promise.reject({status: "error", reason: e.message}));
 };
