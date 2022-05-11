@@ -7,7 +7,7 @@ import {Layout, Menu, Space} from "antd";
 import {Content, Footer, Header} from "antd/lib/layout/layout";
 import {GithubOutlined, InstagramOutlined, TwitterOutlined} from "@ant-design/icons";
 import Discord from "./discord";
-import Eligibility from "./Eligibility";
+import CheckMembership from "./CheckMembership";
 
 const applicationBasename = process.env.PUBLIC_URL + (process.env.PUBLIC_URL.endsWith("/") ? "" : "/");
 
@@ -53,7 +53,7 @@ const App = (): JSX.Element => {
                         <Route path={"/snapshots"} element={<Navigate to="/snapshots/" replace/>}/>
                         <Route path={"/snapshot/"} element={<TakeSnapshot/>}/>
                         <Route path={"/snapshots/"} element={<Snapshots/>}/>
-                        <Route path={"/member/"} element={<Eligibility/>}/>
+                        <Route path={"/member/"} element={<CheckMembership/>}/>
                         <Route path={"*"} element={<NotFound/>}/>
                     </Routes>
                 </Content>
