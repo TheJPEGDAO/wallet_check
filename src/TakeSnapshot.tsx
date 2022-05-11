@@ -6,11 +6,18 @@ import {Button, Carousel, Col, Descriptions, Input, notification, PageHeader, Ro
 import BigNumber from "bignumber.js";
 import AssetSearch from "./AssetSearch";
 import {assetToString, getStellarAsset} from "./common";
-import {CameraOutlined, ClearOutlined, CopyOutlined, FileTextOutlined, GlobalOutlined} from '@ant-design/icons';
+import {
+    CameraOutlined,
+    ClearOutlined,
+    CopyOutlined,
+    FileExcelOutlined,
+    FileTextOutlined,
+    GlobalOutlined
+} from '@ant-design/icons';
 import SnapshotData from "./SnapshotData";
 import {CopyToClipboard} from "react-copy-to-clipboard";
 import {CarouselRef} from "antd/lib/carousel";
-
+import Papa from "papaparse";
 
 const TakeSnapshot = () => {
     const [checkAsset, setCheckAsset] = useState<Asset>();
@@ -51,16 +58,25 @@ const TakeSnapshot = () => {
         };
     }, [threshold, checkAsset, getAccounts.accounts, getAccounts.count]);
 
+    const downloadSnapshot = (url: string, extension: ".json"|".csv"): void => {
+        if (downloadSnapshotLink.current) {
+            downloadSnapshotLink.current.href = url;
+            downloadSnapshotLink.current.setAttribute("download", "snapshot_"+checkAsset!.code+"_"+(new Date().valueOf()/1000).toFixed()+extension);
+            downloadSnapshotLink.current.click();
+        }
+    };
+    const downloadCSV = () => {
+        const url = window.URL.createObjectURL(
+            new Blob([Buffer.from(Papa.unparse(compileSnapshot().accounts))], {type: "application/csv"})
+        );
+        downloadSnapshot(url, ".csv");
+    };
     const downloadJson = () => {
         const url = window.URL.createObjectURL(
             new Blob([Buffer.from(JSON.stringify(compileSnapshot()))], {type: "application/json"})
         );
-        if (downloadSnapshotLink.current) {
-            downloadSnapshotLink.current.href = url;
-            downloadSnapshotLink.current.setAttribute("download", "snapshot_"+(new Date().valueOf()/1000).toFixed()+".json")
-            downloadSnapshotLink.current.click();
-        }
-    }
+        downloadSnapshot(url, ".json");
+    };
     const accountsList = useMemo(() => {
         return getAccounts.accounts.map(account => account.id).join("\n");
     }, [getAccounts.accounts]);
@@ -101,8 +117,7 @@ const TakeSnapshot = () => {
                     <Button icon={<CopyOutlined />} disabled={downloadsDisabled||copied}>{!copied?"Copy account IDs":"IDs copied"}</Button>
                 </CopyToClipboard>
                 <Button icon={<FileTextOutlined />} disabled={downloadsDisabled} onClick={() => downloadJson()}>Download .json</Button>
-
-                {/*<Button icon={<FileExcelOutlined />} disabled={downloadsDisabled}>Download .csv</Button>*/}
+                <Button icon={<FileExcelOutlined />} disabled={downloadsDisabled} onClick={() => downloadCSV()}>Download .csv</Button>
                 <a style={{display: "none"}} href={"."} ref={downloadSnapshotLink}>Download snapshot</a>
             </>}
         />
