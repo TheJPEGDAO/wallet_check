@@ -11,11 +11,10 @@ import {getSortedSnapshotIndex} from "../Snapshots";
 import BigNumber from "bignumber.js";
 import {checkAEffects} from "./checkEffects";
 import {checkPayment, CheckPayment} from "./checkPayment";
-import {Avatar, Col, Collapse, Image, Input, PageHeader, Row, Select, Steps} from "antd";
-import logoSilver from "../silver.gif";
-import logoGold from "../gold.gif";
+import {Col, Collapse, Input, PageHeader, Row, Select, Steps} from "antd";
 import logoJPEG from "../JPEG.png";
 import {ClearOutlined, LoadingOutlined} from "@ant-design/icons";
+import MembershipIcon from "./MembershipIcon";
 
 export type CheckMembershipState = {
     account?: string;
@@ -75,6 +74,11 @@ const Eligibility = () => {
     const [selectedSnapshotIndex, setSelectedSnapshotIndex] = useState<number>();
 
     const [snapshot, setSnapshot] = useState<SnapshotData>();
+
+    const requiresThreshold = useMemo(() =>
+            new Date(jpegSnapshots[selectedSnapshotIndex??0].date) > new Date("2022-04-01"),
+        [jpegSnapshots, selectedSnapshotIndex]
+    );
 
     const step1 = useMemo(() => {
         if (!state.account) setStepsState(p => ({...p, current: 0}));
@@ -199,13 +203,14 @@ const Eligibility = () => {
         if (stepsState.status !== "error") {
             if (stepsState.status === "finish") {
                 setStepsState(p => {
-                    return ({...p, current: p.current+1, progress: 0, status: "wait", message: undefined})
+                    const incrementStepBy = (p.current === 1 && !requiresThreshold) ? 2 : 1;
+                    return ({...p, current: p.current + incrementStepBy, progress: 0, status: "wait", message: undefined})
                 });
             } else {
                 setStepsState(p => ({...p, message: undefined}));
             }
         }
-    }, [stepsState.status]);
+    }, [stepsState.status, requiresThreshold]);
 
     const [startTime, endTime] = useMemo(() => {
         if (undefined === selectedSnapshotIndex) return [undefined, undefined];
@@ -214,26 +219,6 @@ const Eligibility = () => {
         start.setUTCMonth(end.getUTCMonth()-1);
         return [start, end];
     }, [selectedSnapshotIndex]);
-
-    const getMembershipIcon = useMemo(() => {
-        if (undefined === balanceLow || balanceLow.lt(10000)) {
-            return undefined;
-        }
-        return <Avatar
-            style={{border: "1px solid #1890ff"}}
-            shape={"circle"}
-            icon={<Image
-                height={30}
-                width={30}
-                src={(balanceLow.lt(100000)
-                        ? logoSilver
-                        : logoGold
-                )}
-                preview={false}
-            />}
-            size={32}
-        />
-    }, [balanceLow]);
 
     useEffect(() => {
         setStepsState({current: 0, status: undefined, progress: 0});
@@ -301,12 +286,21 @@ const Eligibility = () => {
                                 title="Snapshot"
                                 description={(stepsState.current === 1 ? stepsState.message : undefined)
                                     ??"Check if the account is included in the snapshot taken on " + endTime?.toLocaleDateString()} />
-                            <Steps.Step
-                                status={(stepsState.current === 2 && stepsState.status === "process") ? "finish" : undefined}
-                                icon={(stepsState.current === 2 && stepsState.status === "process") ? <LoadingOutlined /> : getMembershipIcon}
-                                title="Holding threshold"
-                                description={(stepsState.current === 2 ? stepsState.message : undefined)
-                                    ??"Check if account went below threshold since " + startTime?.toLocaleDateString()} />
+                            { requiresThreshold
+                                ? <Steps.Step
+                                    status={(stepsState.current === 2 && stepsState.status === "process") ? "finish" : undefined}
+                                    icon={(stepsState.current === 2 && stepsState.status === "process") ? <LoadingOutlined /> : ((balanceLow && balanceLow.gte(10000))?<MembershipIcon balance={balanceLow}/>:undefined)}
+                                    title="Holding threshold"
+                                    description={(stepsState.current === 2 ? stepsState.message : undefined)
+                                            ??"Check if account went below threshold since " + startTime?.toLocaleDateString()}
+                                />
+                                : <Steps.Step
+                                    title={"Snapshot balance"}
+                                    icon={(stepsState.current >= 2)
+                                        ? <MembershipIcon balance={new BigNumber(snapshot?.accounts.find(a => a.id === state.account)?.balance??0)} />
+                                        : undefined}
+                                    description={"Check account balance in snapshot"}
+                                />}
                             <Steps.Step
                                 title={"Payout"}
                                 subTitle={"Has the account received the tokens?"}
